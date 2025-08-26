@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, LogOut, Bell, Menu } from 'lucide-react';
+import { LayoutGrid, LogOut, Bell, Menu, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/icons';
@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 
 const navItems = [
   { href: '/admin', icon: LayoutGrid, label: 'Dashboard' },
+  { href: '/admin/reports', icon: FileText, label: 'Reports' },
 ];
 
 function SidebarNav() {
@@ -30,7 +31,7 @@ function SidebarNav() {
             key={item.label}
             href={item.href}
             className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              pathname.startsWith(item.href)
+              pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
                 ? 'bg-accent text-accent-foreground'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
