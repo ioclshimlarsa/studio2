@@ -1,0 +1,328 @@
+"use client";
+
+import React, { useState, useTransition } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { CampSchema, saveCampAction, deleteCampAction, type CampFormData } from '@/lib/actions';
+import type { Camp, Registration } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, PlusCircle, Trash2, FilePenLine, User, Download, Eye } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { ScrollArea } from '../ui/scroll-area';
+
+type CampManagementProps = {
+  initialCamps: Camp[];
+  initialRegistrations: Registration[];
+};
+
+export function CampManagement({ initialCamps, initialRegistrations }: CampManagementProps) {
+  const { toast } = useToast();
+  const [camps] = useState<Camp[]>(initialCamps);
+  const [registrations] = useState<Registration[]>(initialRegistrations);
+  const [isFormOpen, setFormOpen] = useState(false);
+  const [isDetailsOpen, setDetailsOpen] = useState(false);
+  const [isDeleteOpen, setDeleteOpen] = useState(false);
+  const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const form = useForm<CampFormData>({
+    resolver: zodResolver(CampSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      district: '',
+      eligibilityCriteria: '',
+      contactEmail: '',
+    },
+  });
+
+  const handleEdit = (camp: Camp) => {
+    setSelectedCamp(camp);
+    form.reset(camp);
+    setFormOpen(true);
+  };
+  
+  const handleNew = () => {
+    setSelectedCamp(null);
+    form.reset({
+      name: '',
+      description: '',
+      district: '',
+      eligibilityCriteria: '',
+      contactEmail: '',
+    });
+    setFormOpen(true);
+  };
+  
+  const handleViewDetails = (camp: Camp) => {
+    setSelectedCamp(camp);
+    setDetailsOpen(true);
+  };
+
+  const handleDeletePrompt = (camp: Camp) => {
+    setSelectedCamp(camp);
+    setDeleteOpen(true);
+  };
+
+  const processForm = (data: CampFormData) => {
+    startTransition(async () => {
+      const result = await saveCampAction(data);
+      if (result.success) {
+        toast({
+          title: 'Success!',
+          description: result.message,
+        });
+        if (result.notification) {
+          toast({
+            title: "Generated Notification Preview",
+            description: <pre className="mt-2 w-full rounded-md bg-slate-950 p-4"><code className="text-white">{result.notification}</code></pre>,
+            duration: 15000,
+          });
+        }
+        setFormOpen(false);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.message,
+        });
+      }
+    });
+  };
+
+  const processDelete = () => {
+    if (!selectedCamp) return;
+    startTransition(async () => {
+      const result = await deleteCampAction(selectedCamp.id);
+      if (result.success) {
+        toast({ title: 'Success', description: result.message });
+        setDeleteOpen(false);
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
+      }
+    });
+  };
+
+  return (
+    <>
+      <div className="flex justify-end mb-4">
+        <Button onClick={handleNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Create Camp
+        </Button>
+      </div>
+
+      <div className="rounded-lg border shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Camp Name</TableHead>
+              <TableHead>District</TableHead>
+              <TableHead>Dates</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {camps.map((camp) => (
+              <TableRow key={camp.id}>
+                <TableCell className="font-medium">{camp.name}</TableCell>
+                <TableCell>{camp.district}</TableCell>
+                <TableCell>
+                  {camp.startDate.toLocaleDateString()} - {camp.endDate.toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={camp.status === 'Ongoing' ? 'default' : 'secondary'} className={
+                    camp.status === 'Upcoming' ? 'bg-blue-200 text-blue-800' : 
+                    camp.status === 'Past' ? 'bg-gray-200 text-gray-800' :
+                    'bg-green-200 text-green-800'
+                  }>{camp.status}</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleViewDetails(camp)}><Eye className="mr-2 h-4 w-4" />View Participants</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(camp)}><FilePenLine className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeletePrompt(camp)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Camp Form Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-headline">{selectedCamp ? 'Edit Camp' : 'Create a New Camp'}</DialogTitle>
+            <DialogDescription>Fill in the details for the camp. Click save when you're done.</DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(processForm)} className="space-y-4">
+              <ScrollArea className="h-[60vh] p-4">
+                <div className="space-y-4">
+                  <FormField control={form.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Camp Name</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField control={form.control} name="description" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl><Textarea {...field} rows={4} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField control={form.control} name="district" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>District</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField control={form.control} name="eligibilityCriteria" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Eligibility Criteria</FormLabel>
+                        <FormControl><Textarea {...field} rows={3} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField control={form.control} name="contactEmail" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Contact Email</FormLabel>
+                        <FormControl><Input type="email" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="startDate" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Date</FormLabel>
+                          <FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField control={form.control} name="endDate" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Date</FormLabel>
+                          <FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </ScrollArea>
+              <DialogFooter>
+                <Button type="button" variant="ghost" onClick={() => setFormOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Camp'}</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* View Participants Dialog */}
+       <Dialog open={isDetailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-headline">{selectedCamp?.name} - Participants</DialogTitle>
+            <DialogDescription>List of students registered for this camp.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto p-1">
+            {registrations.filter(r => r.campId === selectedCamp?.id).length > 0 ? (
+                registrations.filter(r => r.campId === selectedCamp?.id).map(reg => (
+                    <div key={reg.schoolId}>
+                        <h3 className="font-bold my-2">School ID: {reg.schoolId}</h3>
+                        <ul className="list-disc pl-5">
+                            {reg.students.map((student, index) => (
+                                <li key={index} className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> {student.name}</li>
+                            ))}
+                        </ul>
+                    </div>
+                ))
+            ) : (
+                <p className="text-muted-foreground text-center py-8">No participants registered yet.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="secondary">
+              <Download className="mr-2 h-4 w-4" />
+              Export List
+            </Button>
+            <DialogClose asChild>
+              <Button type="button">Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Are you sure?</DialogTitle>
+                <DialogDescription>This will permanently delete the camp "{selectedCamp?.name}". This action cannot be undone.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <Button variant="ghost" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={processDelete} disabled={isPending}>{isPending ? 'Deleting...' : 'Delete'}</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
