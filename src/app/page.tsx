@@ -16,20 +16,15 @@ export default function Home() {
               Your portal for discovering and managing Scouts and Guides camps in Punjab.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <Link href="/admin">
+          <CardContent>
+            <Link href="/login">
               <Button size="lg" className="w-full">
-                Admin Portal <ArrowRight className="ml-2" />
-              </Button>
-            </Link>
-            <Link href="/school">
-              <Button size="lg" variant="secondary" className="w-full">
-                School Portal <ArrowRight className="ml-2" />
+                Proceed to Login <ArrowRight className="ml-2" />
               </Button>
             </Link>
           </CardContent>
           <CardFooter>
-             <p className="text-xs text-muted-foreground w-full">Select your role to sign in.</p>
+             <p className="text-xs text-muted-foreground w-full">Click above to proceed to the login page.</p>
           </CardFooter>
         </Card>
       </div>
