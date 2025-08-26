@@ -12,7 +12,7 @@ import {
     bulkAddSchoolUsersAction
 } from '@/lib/actions';
 import type { SchoolUser, SchoolUserStatus, SchoolUserFormData } from '@/lib/types';
-import { SchoolUserSchema } from '@/lib/types';
+import { SchoolUserFormSchema } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
@@ -91,7 +91,7 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
   const [csvFile, setCsvFile] = useState<File | null>(null);
 
   const form = useForm<SchoolUserFormData>({
-    resolver: zodResolver(SchoolUserSchema),
+    resolver: zodResolver(SchoolUserFormSchema),
     defaultValues: {
         schoolName: '',
         location: '',

@@ -6,7 +6,6 @@ import { db } from './firebase';
 import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, writeBatch, Timestamp, getDoc } from 'firebase/firestore';
 
 import type { Camp, CampFormData, Registration, SchoolUser, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
-import { SchoolUserSchema } from "./types";
 import { getSchoolUsers } from "./data";
 
 export async function loginAction(email: string): Promise<{ success: boolean; message: string }> {
@@ -164,9 +163,9 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
     const { password, confirmPassword, ...userData } = data;
 
     const newUser: Omit<SchoolUser, 'id'> = {
+      ...userData,
       status: 'Active',
       createdAt: new Date(),
-      ...userData
     };
     
     const docRef = await addDoc(collection(db, "schoolUsers"), {
@@ -189,45 +188,26 @@ export async function bulkAddSchoolUsersAction(
   usersData: SchoolUserFormData[]
 ): Promise<{ success: boolean; message: string; newUsers?: SchoolUser[] }> {
   try {
-    const validationPromises = usersData.map(user => SchoolUserSchema.safeParseAsync(user));
-    const validationResults = await Promise.all(validationPromises);
-    
-    const validUsersData = validationResults.reduce((acc, result, index) => {
-        if (result.success) {
-            acc.push(result.data);
-        } else {
-            console.warn(`Invalid data at row ${index + 2}:`, result.error.flatten().fieldErrors);
-        }
-        return acc;
-    }, [] as SchoolUserFormData[]);
-
-    if (validUsersData.length === 0) {
-      return { success: false, message: "No valid user data found in the CSV file." };
-    }
-
     const batch = writeBatch(db);
     const newUsers: SchoolUser[] = [];
-    const createdEmails: string[] = [];
 
-    validUsersData.forEach(data => {
-        const { password, confirmPassword, ...userData } = data;
-        const newUser: Omit<SchoolUser, 'id'> = {
-            status: 'Active',
-            createdAt: new Date(),
-            ...userData
-        };
-        const docRef = doc(collection(db, "schoolUsers"));
-        batch.set(docRef, {
-            ...newUser,
-            createdAt: Timestamp.fromDate(newUser.createdAt)
-        });
-        newUsers.push({ ...newUser, id: docRef.id });
-        createdEmails.push(data.schoolEmail);
-    });
+    for (const data of usersData) {
+      const { password, confirmPassword, ...userData } = data;
+      const newUser: Omit<SchoolUser, 'id'> = {
+        status: 'Active',
+        createdAt: new Date(),
+        ...userData,
+      };
+      const docRef = doc(collection(db, 'schoolUsers'));
+      batch.set(docRef, {
+        ...newUser,
+        createdAt: Timestamp.fromDate(newUser.createdAt),
+      });
+      newUsers.push({ ...newUser, id: docRef.id });
+    }
 
     await batch.commit();
 
-    // In a real app, you would loop through `createdEmails` and create each user in Firebase Auth.
     console.log(`${newUsers.length} new schools were added via bulk upload.`);
     
     revalidatePath("/admin");

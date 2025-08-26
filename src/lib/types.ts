@@ -33,7 +33,7 @@ export const StudentRegistrationSchema = z.object({
 
 export type StudentRegistrationData = z.infer<typeof StudentRegistrationSchema>;
 
-export const SchoolUserSchema = z.object({
+const SchoolUserBaseSchema = z.object({
   id: z.string().optional(),
   schoolName: z.string().min(3, "School name is required."),
   location: z.string().min(3, "Location is required."),
@@ -42,6 +42,9 @@ export const SchoolUserSchema = z.object({
   trainerName: z.string().min(3, "Trainer's name is required."),
   trainerContact: z.string().regex(/^\d{10}$/, { message: "Please enter a valid 10-digit phone number." }),
   schoolEmail: z.string().email("Invalid email address."),
+});
+
+export const SchoolUserFormSchema = SchoolUserBaseSchema.extend({
   password: z.string().min(6, "Password must be at least 6 characters."),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
@@ -49,8 +52,12 @@ export const SchoolUserSchema = z.object({
     path: ["confirmPassword"],
 });
 
+export type SchoolUserFormData = z.infer<typeof SchoolUserFormSchema>;
 
-export type SchoolUserFormData = z.infer<typeof SchoolUserSchema>;
+
+// This is the schema for the data that is actually saved.
+// It does not include the password fields.
+export const SchoolUserSchema = SchoolUserBaseSchema.extend({});
 
 export interface Camp {
   id: string;
