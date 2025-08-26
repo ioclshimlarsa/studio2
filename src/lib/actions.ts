@@ -2,7 +2,7 @@
 
 import { generateCampNotification } from "@/ai/flows/camp-notification-generator";
 import { revalidatePath } from "next/cache";
-import type { CampFormData, StudentRegistrationData } from "./types";
+import type { CampFormData, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
 
 
 export async function saveCampAction(data: CampFormData) {
@@ -58,4 +58,42 @@ export async function registerStudentsAction(data: StudentRegistrationData) {
   } catch (error) {
     return { success: false, message: "Failed to register students." };
   }
+}
+
+export async function saveSchoolUserAction(data: SchoolUserFormData) {
+  try {
+    // In a real app, this would save the user to a database
+    console.log("Saving school user:", data);
+
+    // This is where you might trigger a notification to the new school user's district.
+    // For now, we'll just log it.
+    console.log(`A new school was added in ${data.district}. A notification should be sent.`);
+
+    revalidatePath("/admin");
+    return { success: true, message: `School user "${data.schoolName}" created successfully!` };
+  } catch (error) {
+    console.error("Error saving school user:", error);
+    return { success: false, message: "An error occurred while creating the school user." };
+  }
+}
+
+export async function updateSchoolUserStatusAction(userId: string, status: SchoolUserStatus) {
+    try {
+        console.log(`Updating user ${userId} status to ${status}`);
+        revalidatePath("/admin");
+        return { success: true, message: `User status updated to ${status}.` };
+    } catch (error) {
+        return { success: false, message: "Failed to update user status." };
+    }
+}
+
+export async function resetSchoolUserPasswordAction(userId: string) {
+    try {
+        console.log(`Resetting password for user ${userId}`);
+        // In a real app, this would trigger a password reset email flow.
+        revalidatePath("/admin");
+        return { success: true, message: "Password reset instruction sent." };
+    } catch (error) {
+        return { success: false, message: "Failed to reset password." };
+    }
 }

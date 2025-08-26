@@ -1,4 +1,4 @@
-import type { Camp, Registration } from './types';
+import type { Camp, Registration, SchoolUser } from './types';
 
 const today = new Date();
 const addDays = (date: Date, days: number) => {
@@ -108,6 +108,56 @@ export const mockRegistrations: Registration[] = [
     }
 ];
 
+export const mockSchoolUsers: SchoolUser[] = [
+  {
+    id: 'school-1',
+    schoolName: 'Govt. Model Senior Secondary School',
+    location: 'Sector 16, Chandigarh',
+    district: 'Sahibzada Ajit Singh Nagar (Mohali)',
+    principalName: 'Mrs. Sunita Sharma',
+    trainerName: 'Mr. Rajesh Kumar',
+    trainerContact: '9812345678',
+    schoolEmail: 'principal.gmsss16@example.com',
+    status: 'Active',
+    createdAt: addDays(today, -150),
+  },
+  {
+    id: 'school-2',
+    schoolName: 'Sacred Heart Convent School',
+    location: 'Sarabha Nagar, Ludhiana',
+    district: 'Ludhiana',
+    principalName: 'Sr. Jessy',
+    trainerName: 'Ms. Maria Gomes',
+    trainerContact: '9876512345',
+    schoolEmail: 'contact@shcsldh.com',
+    status: 'Active',
+    createdAt: addDays(today, -120),
+  },
+  {
+    id: 'school-3',
+    schoolName: 'Delhi Public School, Amritsar',
+    location: 'Manawala, Amritsar',
+    district: 'Amritsar',
+    principalName: 'Mr. Vikram Singh',
+    trainerName: 'Mr. Harpreet Singh',
+    trainerContact: '9988776655',
+    schoolEmail: 'info@dpsamritsar.com',
+    status: 'Inactive',
+    createdAt: addDays(today, -90),
+  },
+    {
+    id: 'school-4',
+    schoolName: 'Apeejay School, Jalandhar',
+    location: 'Mahavir Marg, Jalandhar',
+    district: 'Jalandhar',
+    principalName: 'Mr. Girish Kumar',
+    trainerName: 'Ms. Anjali Verma',
+    trainerContact: '9123456789',
+    schoolEmail: 'admissions.jalandhar@apeejay.edu',
+    status: 'Blocked',
+    createdAt: addDays(today, -60),
+  }
+];
 
 // Simulate fetching all camps
 export async function getCamps(): Promise<Camp[]> {
@@ -129,4 +179,10 @@ export async function getCamps(): Promise<Camp[]> {
 // Simulate fetching registrations for a camp
 export async function getRegistrationsForCamp(campId: string): Promise<Registration[]> {
     return mockRegistrations.filter(r => r.campId === campId);
+}
+
+// Simulate fetching all school users
+export async function getSchoolUsers(): Promise<SchoolUser[]> {
+  // In a real app, this would fetch from a database
+  return mockSchoolUsers.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }

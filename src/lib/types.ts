@@ -26,6 +26,18 @@ export const StudentRegistrationSchema = z.object({
 
 export type StudentRegistrationData = z.infer<typeof StudentRegistrationSchema>;
 
+export const SchoolUserSchema = z.object({
+  id: z.string().optional(),
+  schoolName: z.string().min(3, "School name is required."),
+  location: z.string().min(3, "Location is required."),
+  district: z.string().min(1, "District is required."),
+  principalName: z.string().min(3, "Principal's name is required."),
+  trainerName: z.string().min(3, "Trainer's name is required."),
+  trainerContact: z.string().regex(/^\d{10}$/, { message: "Please enter a valid 10-digit phone number." }),
+  schoolEmail: z.string().email("Invalid email address."),
+});
+
+export type SchoolUserFormData = z.infer<typeof SchoolUserSchema>;
 
 export interface Camp {
   id: string;
@@ -52,4 +64,19 @@ export interface Registration {
   campId: string;
   schoolId: string;
   students: { name: string }[];
+}
+
+export type SchoolUserStatus = 'Active' | 'Inactive' | 'Blocked';
+
+export interface SchoolUser {
+  id: string;
+  schoolName: string;
+  location: string;
+  district: string;
+  principalName: string;
+  trainerName: string;
+  trainerContact: string;
+  schoolEmail: string;
+  status: SchoolUserStatus;
+  createdAt: Date;
 }
