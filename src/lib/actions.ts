@@ -160,24 +160,35 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
 
 export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ success: boolean; message: string; newUser?: SchoolUser; }> {
   try {
-    // We don't store passwords, but this action simulates creating a user with one.
-    // The password fields are only used for validation within the Zod schema.
-    const { password, confirmPassword, ...userData } = data;
-
-    const newUser: Omit<SchoolUser, 'id'> = {
-      ...userData,
-      status: 'Active',
-      createdAt: new Date(),
+    // Manually construct the object to be saved, excluding password fields.
+    const newUserToSave = {
+      schoolName: data.schoolName,
+      location: data.location,
+      district: data.district,
+      principalName: data.principalName,
+      trainerName: data.trainerName,
+      trainerContact: data.trainerContact,
+      schoolEmail: data.schoolEmail,
+      status: 'Active' as SchoolUserStatus,
+      createdAt: Timestamp.fromDate(new Date()),
     };
-    
-    const docRef = await addDoc(collection(db, "schoolUsers"), {
-        ...newUser,
-        createdAt: Timestamp.fromDate(newUser.createdAt)
-    });
+
+    const docRef = await addDoc(collection(db, "schoolUsers"), newUserToSave);
     
     revalidatePath("/admin");
 
-    const savedUser = { ...newUser, id: docRef.id };
+    const savedUser: SchoolUser = {
+      id: docRef.id,
+      schoolName: data.schoolName,
+      location: data.location,
+      district: data.district,
+      principalName: data.principalName,
+      trainerName: data.trainerName,
+      trainerContact: data.trainerContact,
+      schoolEmail: data.schoolEmail,
+      status: 'Active',
+      createdAt: new Date(),
+    };
 
     const message = `School user "${savedUser.schoolName}" created successfully! They can now log in with the email ${savedUser.schoolEmail}.`;
     return { success: true, message, newUser: savedUser };
