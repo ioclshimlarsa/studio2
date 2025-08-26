@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'CampConnect Punjab',
-  description: 'Connecting schools with enriching camps across Punjab.',
+  title: 'Bharat Scouts and Guides Punjab Camp Connect',
+  description: 'Connecting schools with enriching Scouts and Guides camps across Punjab.',
 };
 
 export default function RootLayout({

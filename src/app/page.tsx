@@ -11,9 +11,9 @@ export default function Home() {
         <Logo className="h-12 w-auto" />
         <Card className="w-full max-w-md shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-3xl font-headline text-primary">Welcome to CampConnect</CardTitle>
+            <CardTitle className="text-3xl font-headline text-primary">Welcome to Bharat Scouts and Guides Punjab Camp Connect</CardTitle>
             <CardDescription className="pt-2 font-body text-base">
-              Your portal for discovering and managing educational and recreational camps in Punjab.
+              Your portal for discovering and managing Scouts and Guides camps in Punjab.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
