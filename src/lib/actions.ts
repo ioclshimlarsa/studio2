@@ -4,6 +4,7 @@ import { generateCampNotification } from "@/ai/flows/camp-notification-generator
 import { revalidatePath } from "next/cache";
 import type { CampFormData, SchoolUser, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
 import { mockSchoolUsers } from "./data";
+import { SchoolUserSchema } from "./types";
 
 
 export async function saveCampAction(data: CampFormData) {
@@ -81,6 +82,49 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
   } catch (error) {
     console.error("Error saving school user:", error);
     return { success: false, message: "An error occurred while creating the school user." };
+  }
+}
+
+export async function bulkAddSchoolUsersAction(
+  usersData: SchoolUserFormData[]
+): Promise<{ success: boolean; message: string; newUsers?: SchoolUser[] }> {
+  try {
+    const validationPromises = usersData.map(user => SchoolUserSchema.safeParseAsync(user));
+    const validationResults = await Promise.all(validationPromises);
+    
+    const validUsersData = validationResults.reduce((acc, result, index) => {
+        if (result.success) {
+            acc.push(result.data);
+        } else {
+            console.warn(`Invalid data at row ${index + 2}:`, result.error.flatten().fieldErrors);
+        }
+        return acc;
+    }, [] as SchoolUserFormData[]);
+
+    if (validUsersData.length === 0) {
+      return { success: false, message: "No valid user data found in the CSV file." };
+    }
+
+    const newUsers: SchoolUser[] = validUsersData.map(data => ({
+      id: `school-${Math.random().toString(36).substr(2, 9)}`,
+      status: 'Active', 
+      createdAt: new Date(),
+      ...data,
+    }));
+
+    mockSchoolUsers.unshift(...newUsers);
+
+    console.log(`${newUsers.length} new schools were added via bulk upload.`);
+    
+    revalidatePath("/admin");
+    return { 
+      success: true, 
+      message: `Successfully added and activated ${newUsers.length} new school users.`,
+      newUsers
+    };
+  } catch (error) {
+    console.error("Error during bulk school user creation:", error);
+    return { success: false, message: "An error occurred during the bulk upload process." };
   }
 }
 

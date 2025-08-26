@@ -3,14 +3,16 @@
 import React, { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Papa from 'papaparse';
 import { 
     saveSchoolUserAction, 
     updateSchoolUserStatusAction, 
     resetSchoolUserPasswordAction,
-    deleteSchoolUserAction
+    deleteSchoolUserAction,
+    bulkAddSchoolUsersAction
 } from '@/lib/actions';
-import type { SchoolUser, SchoolUserStatus } from '@/lib/types';
-import { SchoolUserSchema, type SchoolUserFormData } from '@/lib/types';
+import type { SchoolUser, SchoolUserStatus, SchoolUserFormData } from '@/lib/types';
+import { SchoolUserSchema } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
@@ -65,6 +67,7 @@ import {
     UserX,
     UserCheck,
     Trash2,
+    Upload,
 } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -78,12 +81,14 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
   const { toast } = useToast();
   const [schoolUsers, setSchoolUsers] = useState<SchoolUser[]>(initialSchoolUsers);
   const [isFormOpen, setFormOpen] = useState(false);
+  const [isBulkOpen, setBulkOpen] = useState(false);
   const [isAlertOpen, setAlertOpen] = useState(false);
   const [isPasswordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [alertContent, setAlertContent] = useState({ title: '', description: '', onConfirm: () => {} });
   const [selectedUser, setSelectedUser] = useState<SchoolUser | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [csvFile, setCsvFile] = useState<File | null>(null);
 
   const form = useForm<SchoolUserFormData>({
     resolver: zodResolver(SchoolUserSchema),
@@ -102,6 +107,11 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
     setSelectedUser(null);
     form.reset();
     setFormOpen(true);
+  };
+  
+  const handleBulkUpload = () => {
+    setCsvFile(null);
+    setBulkOpen(true);
   };
 
   const handleStatusChange = (user: SchoolUser, status: SchoolUserStatus) => {
@@ -143,6 +153,36 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
       }
     });
   };
+
+  const processBulkUpload = () => {
+    if (!csvFile) {
+        toast({ variant: "destructive", title: "Error", description: "Please select a CSV file to upload." });
+        return;
+    }
+    
+    startTransition(() => {
+        Papa.parse(csvFile, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+                const parsedData = results.data as SchoolUserFormData[];
+                const result = await bulkAddSchoolUsersAction(parsedData);
+                
+                if (result.success && result.newUsers) {
+                    setSchoolUsers(prev => [...result.newUsers!, ...prev]);
+                    toast({ title: 'Success!', description: result.message });
+                    setBulkOpen(false);
+                } else {
+                    toast({ variant: 'destructive', title: 'Error', description: result.message });
+                }
+            },
+            error: (error) => {
+                toast({ variant: "destructive", title: "CSV Parsing Error", description: error.message });
+            }
+        });
+    });
+  };
+
 
   const processStatusUpdate = (userId: string, status: SchoolUserStatus) => {
     startTransition(async () => {
@@ -197,7 +237,11 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
+        <Button onClick={handleBulkUpload} variant="outline">
+          <Upload className="mr-2 h-4 w-4" />
+          Bulk Upload
+        </Button>
         <Button onClick={handleNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
           <PlusCircle className="mr-2 h-4 w-4" />
           Add New School
@@ -311,6 +355,34 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk CSV Upload Dialog */}
+      <Dialog open={isBulkOpen} onOpenChange={setBulkOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Bulk Upload School Users</DialogTitle>
+                  <DialogDescription>
+                    Upload a CSV file to add multiple school users at once. The CSV must have headers: 
+                    `schoolName`, `location`, `district`, `principalName`, `trainerName`, `trainerContact`, `schoolEmail`.
+                  </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Label htmlFor="csv-file">CSV File</Label>
+                <Input 
+                    id="csv-file" 
+                    type="file" 
+                    accept=".csv"
+                    onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)} 
+                />
+              </div>
+              <DialogFooter>
+                  <Button variant="ghost" onClick={() => setBulkOpen(false)}>Cancel</Button>
+                  <Button onClick={processBulkUpload} disabled={isPending || !csvFile}>
+                      {isPending ? 'Uploading...' : 'Upload and Activate'}
+                  </Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
       
       {/* Confirmation Alert Dialog for Status Change or Delete */}
       <AlertDialog open={isAlertOpen} onOpenChange={setAlertOpen}>
@@ -324,7 +396,7 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
                 <AlertDialogAction 
                     onClick={alertContent.onConfirm} 
                     disabled={isPending}
-                    className={alertContent.title.includes('delete') ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+                    className={alertContent.title.includes('delete') || alertContent.title.includes('Block') ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
                 >
                     {isPending ? 'Processing...' : 'Confirm'}
                 </AlertDialogAction>
