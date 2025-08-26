@@ -3,7 +3,8 @@
 import React, { useState, useTransition, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { registerStudentsAction, StudentRegistrationSchema, type StudentRegistrationData } from '@/lib/actions';
+import { registerStudentsAction } from '@/lib/actions';
+import { StudentRegistrationSchema, type StudentRegistrationData } from '@/lib/types';
 import type { Camp } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';

@@ -3,8 +3,10 @@
 import React, { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CampSchema, saveCampAction, deleteCampAction, type CampFormData } from '@/lib/actions';
+import { saveCampAction } from '@/lib/actions';
+import { deleteCampAction } from '@/lib/actions';
 import type { Camp, Registration } from '@/lib/types';
+import { CampSchema, type CampFormData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +23,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';

@@ -1,24 +1,8 @@
 "use server";
 
-import { z } from "zod";
 import { generateCampNotification } from "@/ai/flows/camp-notification-generator";
 import { revalidatePath } from "next/cache";
-
-export const CampSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(3, { message: "Camp name must be at least 3 characters." }),
-  description: z.string().min(10, { message: "Description must be at least 10 characters." }),
-  district: z.string().min(2, { message: "District is required." }),
-  eligibilityCriteria: z.string().min(10, { message: "Eligibility is required." }),
-  contactEmail: z.string().email({ message: "Invalid email address." }),
-  startDate: z.date({ required_error: "Start date is required."}),
-  endDate: z.date({ required_error: "End date is required."}),
-}).refine(data => data.endDate > data.startDate, {
-    message: "End date must be after start date.",
-    path: ["endDate"],
-});
-
-export type CampFormData = z.infer<typeof CampSchema>;
+import { CampFormData, StudentRegistrationData } from "./types";
 
 
 export async function saveCampAction(data: CampFormData) {
@@ -60,13 +44,6 @@ export async function deleteCampAction(campId: string) {
         return { success: false, message: "Failed to delete camp." };
     }
 }
-
-export const StudentRegistrationSchema = z.object({
-  campId: z.string(),
-  studentNames: z.string().min(1, { message: "Please enter at least one student name." }),
-});
-
-export type StudentRegistrationData = z.infer<typeof StudentRegistrationSchema>;
 
 export async function registerStudentsAction(data: StudentRegistrationData) {
   try {
