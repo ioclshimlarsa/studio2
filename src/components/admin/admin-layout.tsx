@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 
 const navItems = [
   { href: '/admin', icon: LayoutGrid, label: 'Dashboard' },
@@ -68,8 +68,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col">
-                <div className="flex h-16 items-center border-b px-6">
+            <SheetContent side="left" className="flex flex-col p-0">
+                <SheetHeader className="p-6">
+                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                </SheetHeader>
+                <div className="flex h-16 items-center border-b px-6 -mt-6">
                     <Link href="/admin">
                     <Logo />
                     </Link>
