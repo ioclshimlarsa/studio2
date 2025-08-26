@@ -1,23 +1,15 @@
 import { getCamps, getRegistrations, getSchoolUsers } from '@/lib/data';
 import type { Camp, Registration, SchoolUser } from '@/lib/types';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { FileText, Users, Activity, Eye } from 'lucide-react';
+import { FileText, Users, Activity, Eye, Download } from 'lucide-react';
 import { CampWiseReport } from '@/components/admin/camp-wise-report';
 
 export default async function ReportsPage() {
@@ -25,31 +17,16 @@ export default async function ReportsPage() {
     const schoolUsers = await getSchoolUsers();
     const registrations = await getRegistrations();
 
-    const getParticipantCount = (campId: string) => {
-        return registrations
-          .filter(r => r.campId === campId)
-          .reduce((sum, reg) => sum + reg.students.length, 0);
-    }
-    
-    const getStatusBadgeVariant = (status: 'Active' | 'Inactive' | 'Blocked') => {
-      switch (status) {
-          case 'Active': return 'bg-green-200 text-green-800';
-          case 'Inactive': return 'bg-gray-200 text-gray-800';
-          case 'Blocked': return 'bg-red-200 text-red-800';
-          default: return 'secondary';
-      }
-    }
-
     return (
         <>
             <header className="mb-8">
                 <h1 className="text-3xl font-bold font-headline text-primary">Reports</h1>
                 <p className="text-muted-foreground font-body mt-1">
-                    View detailed reports on camps, users, and activities.
+                    Download detailed reports on camps, users, and activities.
                 </p>
             </header>
 
-            <div className="grid gap-8">
+            <div className="grid gap-8 md:grid-cols-2">
                 {/* 1. Camp Report */}
                 <Card>
                     <CardHeader>
@@ -57,37 +34,13 @@ export default async function ReportsPage() {
                             <FileText className="h-5 w-5" />
                             <span>Camp Report</span>
                         </CardTitle>
-                        <CardDescription>An overview of all created camps.</CardDescription>
+                        <CardDescription>Download an overview of all created camps, including participant numbers.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Camp Name</TableHead>
-                                    <TableHead>District(s)</TableHead>
-                                    <TableHead>Dates</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Participants</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {camps.map(camp => (
-                                    <TableRow key={camp.id}>
-                                        <TableCell>{camp.name}</TableCell>
-                                        <TableCell>{camp.district.join(', ')}</TableCell>
-                                        <TableCell>{camp.startDate.toLocaleDateString()} - {camp.endDate.toLocaleDateString()}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={camp.status === 'Ongoing' ? 'default' : 'secondary'} className={
-                                                camp.status === 'Upcoming' ? 'bg-blue-200 text-blue-800' : 
-                                                camp.status === 'Past' ? 'bg-gray-200 text-gray-800' :
-                                                'bg-green-200 text-green-800'
-                                            }>{camp.status}</Badge>
-                                        </TableCell>
-                                        <TableCell>{getParticipantCount(camp.id)} / {camp.maxParticipants}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                        <Button>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download Camp Report
+                        </Button>
                     </CardContent>
                 </Card>
 
@@ -98,33 +51,13 @@ export default async function ReportsPage() {
                             <Users className="h-5 w-5" />
                             <span>User Details Report</span>
                         </CardTitle>
-                        <CardDescription>Details of all registered school users.</CardDescription>
+                        <CardDescription>Download details of all registered school users, including their status.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>School Name</TableHead>
-                                    <TableHead>District</TableHead>
-                                    <TableHead>Trainer</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead>Status</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {schoolUsers.map(user => (
-                                    <TableRow key={user.id}>
-                                        <TableCell>{user.schoolName}</TableCell>
-                                        <TableCell>{user.district}</TableCell>
-                                        <TableCell>{user.trainerName}</TableCell>
-                                        <TableCell>{user.schoolEmail}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="secondary" className={getStatusBadgeVariant(user.status)}>{user.status}</Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                        <Button>
+                           <Download className="mr-2 h-4 w-4" />
+                           Download User Report
+                        </Button>
                     </CardContent>
                 </Card>
                 
@@ -138,10 +71,10 @@ export default async function ReportsPage() {
                         <CardDescription>Login and other activity details of all users.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Alert>
+                       <Alert>
                             <AlertTitle>Feature Under Development</AlertTitle>
                             <AlertDescription>
-                                Detailed user activity logging requires a more advanced backend implementation and is not yet available in this prototype.
+                                Detailed user activity logging is not yet available for download in this prototype.
                             </AlertDescription>
                         </Alert>
                     </CardContent>
@@ -154,7 +87,7 @@ export default async function ReportsPage() {
                             <Eye className="h-5 w-5" />
                             <span>Camp-wise Participant Report</span>
                         </CardTitle>
-                        <CardDescription>View detailed participant lists for a specific camp.</CardDescription>
+                        <CardDescription>Select a camp to download its detailed participant list.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <CampWiseReport camps={camps} registrations={registrations} />
