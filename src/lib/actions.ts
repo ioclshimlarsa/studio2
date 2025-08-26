@@ -158,7 +158,7 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
   }
 }
 
-export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ success: boolean; message: string; newUser?: Omit<SchoolUser, 'password'>; }> {
+export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ success: boolean; message: string; newUser?: SchoolUser; }> {
   try {
     const { password, confirmPassword, ...userData } = data;
 
@@ -173,8 +173,6 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
         createdAt: Timestamp.fromDate(newUser.createdAt)
     });
 
-    // In a real app, you would use the Firebase Admin SDK to create a new user in Firebase Auth.
-    // e.g., admin.auth().createUser({ email: data.schoolEmail, password: password });
     const message = `School user "${data.schoolName}" created successfully! They can now log in with the email ${data.schoolEmail} and the password you provided.`;
 
     revalidatePath("/admin");
