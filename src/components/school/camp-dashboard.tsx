@@ -27,7 +27,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, MapPin, Target } from 'lucide-react';
+import { Calendar, MapPin, Target, Phone, User } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
 
@@ -41,7 +41,7 @@ function CampCard({ camp, onRegister }: { camp: Camp, onRegister: (camp: Camp) =
             <CardHeader>
                 <CardTitle className="font-headline text-primary">{camp.name}</CardTitle>
                 <CardDescription className="flex items-center pt-1 gap-2 text-sm">
-                    <MapPin className="h-4 w-4" /> {camp.district}
+                    <MapPin className="h-4 w-4" /> {camp.location}, {camp.district}
                 </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow font-body space-y-3">
@@ -51,8 +51,18 @@ function CampCard({ camp, onRegister }: { camp: Camp, onRegister: (camp: Camp) =
                     <span>{format(camp.startDate, "MMM d, yyyy")} - {format(camp.endDate, "MMM d, yyyy")}</span>
                 </div>
                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <Target className="h-4 w-4 mt-1" />
+                    <Target className="h-4 w-4 mt-1 flex-shrink-0" />
                     <span>{camp.eligibilityCriteria}</span>
+                </div>
+                <div className="border-t pt-3 mt-3 space-y-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>{camp.contactPerson}</span>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        <span>{camp.contactNumber}</span>
+                    </div>
                 </div>
             </CardContent>
             <CardFooter>

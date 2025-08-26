@@ -68,8 +68,11 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
     defaultValues: {
       name: '',
       description: '',
+      location: '',
       district: '',
       eligibilityCriteria: '',
+      contactPerson: '',
+      contactNumber: '',
       contactEmail: '',
     },
   });
@@ -85,8 +88,11 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
     form.reset({
       name: '',
       description: '',
+      location: '',
       district: '',
       eligibilityCriteria: '',
+      contactPerson: '',
+      contactNumber: '',
       contactEmail: '',
     });
     setFormOpen(true);
@@ -155,7 +161,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
           <TableHeader>
             <TableRow>
               <TableHead>Camp Name</TableHead>
-              <TableHead>District</TableHead>
+              <TableHead>District(s)</TableHead>
               <TableHead>Dates</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -223,15 +229,23 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
                       </FormItem>
                     )}
                   />
-                  <FormField control={form.control} name="district" render={({ field }) => (
+                  <FormField control={form.control} name="location" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>District</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
+                        <FormLabel>Location</FormLabel>
+                        <FormControl><Input {...field} placeholder="e.g. Govt. Senior Secondary School, Model Town" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField control={form.control} name="eligibilityCriteria" render={({ field }) => (
+                  <FormField control={form.control} name="district" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>District(s)</FormLabel>
+                        <FormControl><Input {...field} placeholder="e.g. Ludhiana, Jalandhar, Amritsar" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField control={form.control} name="eligibilityCriteria" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Eligibility Criteria</FormLabel>
                         <FormControl><Textarea {...field} rows={3} /></FormControl>
@@ -239,6 +253,26 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
                       </FormItem>
                     )}
                   />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="contactPerson" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Person Name</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField control={form.control} name="contactNumber" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Person Number</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                 
                   <FormField control={form.control} name="contactEmail" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Contact Email</FormLabel>

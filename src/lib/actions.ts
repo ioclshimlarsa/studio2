@@ -30,6 +30,9 @@ export async function saveCampAction(data: CampFormData) {
 
   } catch (error) {
     console.error("Error saving camp:", error);
+    if (error instanceof Error) {
+        return { success: false, message: error.message };
+    }
     return { success: false, message: "An error occurred while saving the camp." };
   }
 }
