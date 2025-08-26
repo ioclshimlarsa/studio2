@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { 
     saveSchoolUserAction, 
     updateSchoolUserStatusAction, 
-    resetSchoolUserPasswordAction 
+    resetSchoolUserPasswordAction,
+    deleteSchoolUserAction
 } from '@/lib/actions';
 import type { SchoolUser, SchoolUserStatus } from '@/lib/types';
 import { SchoolUserSchema, type SchoolUserFormData } from '@/lib/types';
@@ -63,6 +64,7 @@ import {
     KeyRound, 
     UserX,
     UserCheck,
+    Trash2,
 } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -118,6 +120,16 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
     setNewPassword('');
     setPasswordDialogOpen(true);
   };
+  
+  const handleDeletePrompt = (user: SchoolUser) => {
+    setSelectedUser(user);
+    setAlertContent({
+        title: 'Are you absolutely sure?',
+        description: `This action cannot be undone. This will permanently delete the user for "${user.schoolName}".`,
+        onConfirm: () => processDelete(user.id)
+    });
+    setAlertOpen(true);
+  };
 
   const processForm = (data: SchoolUserFormData) => {
     startTransition(async () => {
@@ -161,6 +173,19 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
     });
   };
   
+   const processDelete = (userId: string) => {
+    startTransition(async () => {
+        const result = await deleteSchoolUserAction(userId);
+        if (result.success) {
+            setSchoolUsers(prev => prev.filter(u => u.id !== userId));
+            toast({ title: 'Success', description: result.message });
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.message });
+        }
+        setAlertOpen(false);
+    });
+  };
+
   const getStatusBadgeVariant = (status: SchoolUserStatus) => {
       switch (status) {
           case 'Active': return 'bg-green-200 text-green-800';
@@ -218,6 +243,8 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
                         {user.status !== 'Blocked' && <DropdownMenuItem onClick={() => handleStatusChange(user, 'Blocked')} className="text-destructive"><Ban className="mr-2 h-4 w-4" />Block</DropdownMenuItem>}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handlePasswordReset(user)}><KeyRound className="mr-2 h-4 w-4" />Reset Password</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDeletePrompt(user)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete User</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -285,7 +312,7 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
         </DialogContent>
       </Dialog>
       
-      {/* Confirmation Alert Dialog for Status Change */}
+      {/* Confirmation Alert Dialog for Status Change or Delete */}
       <AlertDialog open={isAlertOpen} onOpenChange={setAlertOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -294,7 +321,11 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={alertContent.onConfirm} disabled={isPending}>
+                <AlertDialogAction 
+                    onClick={alertContent.onConfirm} 
+                    disabled={isPending}
+                    className={alertContent.title.includes('delete') ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+                >
                     {isPending ? 'Processing...' : 'Confirm'}
                 </AlertDialogAction>
             </AlertDialogFooter>

@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { generateCampNotification } from "@/ai/flows/camp-notification-generator";
 import { revalidatePath } from "next/cache";
@@ -105,5 +105,21 @@ export async function resetSchoolUserPasswordAction(userId: string, newPassword?
         return { success: true, message: "Password has been reset successfully." };
     } catch (error) {
         return { success: false, message: "Failed to reset password." };
+    }
+}
+
+export async function deleteSchoolUserAction(userId: string) {
+    try {
+        console.log(`Deleting user ${userId}`);
+        const userIndex = mockSchoolUsers.findIndex(u => u.id === userId);
+        if (userIndex > -1) {
+            mockSchoolUsers.splice(userIndex, 1);
+        } else {
+            return { success: false, message: "User not found." };
+        }
+        revalidatePath("/admin");
+        return { success: true, message: "User has been deleted successfully." };
+    } catch (error) {
+        return { success: false, message: "Failed to delete user." };
     }
 }
