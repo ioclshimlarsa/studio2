@@ -83,10 +83,31 @@ export function SchoolLayout({ children }: { children: React.ReactNode }) {
           <div className="flex-1" />
           
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Bell className="h-5 w-5" />
+                  <span className="sr-only">Notifications</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                   <div className="flex flex-col">
+                    <p className="font-semibold">New Camp Available</p>
+                    <p className="text-xs text-muted-foreground">A new 'Youth Leadership Summit' is available in your district.</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                   <div className="flex flex-col">
+                    <p className="font-semibold">Registration Confirmed</p>
+                    <p className="text-xs text-muted-foreground">Your students are confirmed for the 'Winter Sports Camp'.</p>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">

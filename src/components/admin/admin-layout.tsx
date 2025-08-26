@@ -84,10 +84,37 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <div className="flex-1" />
           
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Bell className="h-5 w-5" />
+                  <span className="sr-only">Notifications</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <div className="flex flex-col">
+                    <p className="font-semibold">Registration</p>
+                    <p className="text-xs text-muted-foreground">Sacred Heart School registered for 'Summer Scout Adventure'.</p>
+                  </div>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                  <div className="flex flex-col">
+                    <p className="font-semibold">Camp Full</p>
+                    <p className="text-xs text-muted-foreground">'Digital Literacy Workshop' has reached its max participants.</p>
+                  </div>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                  <div className="flex flex-col">
+                    <p className="font-semibold">New School Added</p>
+                    <p className="text-xs text-muted-foreground">Apeejay School, Jalandhar has been added.</p>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
