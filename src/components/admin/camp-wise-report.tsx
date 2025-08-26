@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import type { Camp, Registration } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -16,10 +16,6 @@ type CampWiseReportProps = {
 export function CampWiseReport({ camps, registrations }: CampWiseReportProps) {
   const [selectedCampId, setSelectedCampId] = useState<string | null>(null);
 
-  const sortedCamps = useMemo(() => {
-    return [...camps].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
-  }, [camps]);
-
   return (
     <div className="space-y-4">
       <div className="max-w-sm">
@@ -28,7 +24,7 @@ export function CampWiseReport({ camps, registrations }: CampWiseReportProps) {
             <SelectValue placeholder="Select a camp..." />
           </SelectTrigger>
           <SelectContent>
-            {sortedCamps.map(camp => (
+            {camps.map(camp => (
               <SelectItem key={camp.id} value={camp.id}>
                 {camp.name} ({format(new Date(camp.startDate), 'PPP')})
               </SelectItem>

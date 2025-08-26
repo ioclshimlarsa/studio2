@@ -17,6 +17,8 @@ export default async function ReportsPage() {
     const schoolUsers = await getSchoolUsers();
     const registrations = await getRegistrations();
 
+    const sortedCamps = [...camps].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+
     return (
         <>
             <header className="mb-8">
@@ -90,7 +92,7 @@ export default async function ReportsPage() {
                         <CardDescription>Select a camp to download its detailed participant list.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <CampWiseReport camps={camps} registrations={registrations} />
+                        <CampWiseReport camps={sortedCamps} registrations={registrations} />
                     </CardContent>
                 </Card>
             </div>
