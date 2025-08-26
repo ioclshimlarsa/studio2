@@ -5,9 +5,27 @@ import { revalidatePath } from "next/cache";
 import { db } from './firebase';
 import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, writeBatch, Timestamp, getDoc } from 'firebase/firestore';
 
-import type { CampFormData, Registration, SchoolUser, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
+import type { Camp, CampFormData, Registration, SchoolUser, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
 import { SchoolUserSchema } from "./types";
-import { getSchoolUser } from "./data";
+import { getSchoolUser, getSchoolUsers } from "./data";
+
+export async function loginAction(email: string): Promise<{ success: boolean; message: string }> {
+    try {
+        const schoolUsers = await getSchoolUsers();
+        const userExists = schoolUsers.some(user => user.schoolEmail.toLowerCase() === email.toLowerCase());
+        
+        if (userExists) {
+            // In a real app with Firebase Auth, you would use signInWithEmailAndPassword here.
+            // For this prototype, we're just checking if the user email exists in our Firestore collection.
+            return { success: true, message: "Login successful." };
+        } else {
+            return { success: false, message: "No school found with that email address. Please contact an administrator." };
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        return { success: false, message: "An error occurred during login." };
+    }
+}
 
 
 export async function saveCampAction(data: CampFormData) {
@@ -80,11 +98,14 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
     if (!campSnap.exists()) {
         return { success: false, message: "Camp not found." };
     }
-    const camp = { ...campSnap.data(), id: campSnap.id } as Camp;
-    camp.startDate = (campSnap.data().startDate as Timestamp).toDate(); // convert timestamp
-    camp.endDate = (campSnap.data().endDate as Timestamp).toDate(); // convert timestamp
+    const campData = campSnap.data();
+    const camp = {
+        ...campData,
+        id: campSnap.id,
+        startDate: (campData.startDate as Timestamp).toDate(),
+        endDate: (campData.endDate as Timestamp).toDate()
+    } as Camp;
     
-    // Check if camp is still upcoming
     const now = new Date();
     if (now > camp.startDate) {
       return { success: false, message: "Registration failed. This camp has already started or is over." };
@@ -150,10 +171,12 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
         createdAt: Timestamp.fromDate(newUser.createdAt)
     });
 
-    console.log(`A new school was added in ${data.district}. A notification should be sent.`);
+    // In a real app, you would use the Firebase Admin SDK to create a new user in Firebase Auth.
+    // e.g., admin.auth().createUser({ email: data.schoolEmail, password: 'some-default-password' });
+    const message = `School user "${data.schoolName}" created successfully! A password must be set for them in the Firebase Console.`;
 
     revalidatePath("/admin");
-    return { success: true, message: `School user "${data.schoolName}" created successfully!`, newUser: { ...newUser, id: docRef.id } };
+    return { success: true, message, newUser: { ...newUser, id: docRef.id } };
   } catch (error) {
     console.error("Error saving school user:", error);
     return { success: false, message: "An error occurred while creating the school user." };
@@ -182,6 +205,7 @@ export async function bulkAddSchoolUsersAction(
 
     const batch = writeBatch(db);
     const newUsers: SchoolUser[] = [];
+    const createdEmails: string[] = [];
 
     validUsersData.forEach(data => {
         const newUser: Omit<SchoolUser, 'id'> = {
@@ -195,16 +219,18 @@ export async function bulkAddSchoolUsersAction(
             createdAt: Timestamp.fromDate(newUser.createdAt)
         });
         newUsers.push({ ...newUser, id: docRef.id });
+        createdEmails.push(data.schoolEmail);
     });
 
     await batch.commit();
 
+    // In a real app, you would loop through `createdEmails` and create each user in Firebase Auth.
     console.log(`${newUsers.length} new schools were added via bulk upload.`);
     
     revalidatePath("/admin");
     return { 
       success: true, 
-      message: `Successfully added and activated ${newUsers.length} new school users.`,
+      message: `Successfully added and activated ${newUsers.length} new school users. Passwords must be set for them in the Firebase Console.`,
       newUsers
     };
   } catch (error) {
@@ -217,6 +243,8 @@ export async function updateSchoolUserStatusAction(userId: string, status: Schoo
     try {
         const userRef = doc(db, "schoolUsers", userId);
         await updateDoc(userRef, { status: status });
+        // In a real app with Firebase Auth, you might disable the user account here.
+        // e.g., admin.auth().updateUser(authUid, { disabled: status !== 'Active' });
         revalidatePath("/admin");
         return { success: true, message: `User status updated to ${status}.` };
     } catch (error) {
@@ -227,10 +255,13 @@ export async function updateSchoolUserStatusAction(userId: string, status: Schoo
 
 export async function resetSchoolUserPasswordAction(userId: string, newPassword?: string) {
     try {
-        // In a real app, this would integrate with Firebase Auth
-        console.log(`Resetting password for user ${userId} to ${newPassword}`);
+        // In a real app with Firebase Auth, you would use the Firebase Admin SDK to update the user's password
+        // or send a password reset email.
+        // e.g., admin.auth().updateUser(authUid, { password: newPassword });
+        // e.g., admin.auth().generatePasswordResetLink(email);
+        console.log(`Password reset requested for user ${userId}. New password would be: ${newPassword}`);
         revalidatePath("/admin");
-        return { success: true, message: "Password has been reset successfully." };
+        return { success: true, message: "A password reset has been simulated successfully." };
     } catch (error) {
         return { success: false, message: "Failed to reset password." };
     }
@@ -239,6 +270,8 @@ export async function resetSchoolUserPasswordAction(userId: string, newPassword?
 export async function deleteSchoolUserAction(userId: string) {
     try {
         await deleteDoc(doc(db, "schoolUsers", userId));
+         // In a real app with Firebase Auth, you would also delete the user from the Auth service.
+        // e.g., admin.auth().deleteUser(authUid);
         revalidatePath("/admin");
         return { success: true, message: "User has been deleted successfully." };
     } catch (error) {
