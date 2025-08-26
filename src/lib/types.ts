@@ -69,6 +69,7 @@ export interface Student {
 }
 
 export interface Registration {
+  id: string;
   campId: string;
   schoolId: string;
   schoolName: string;

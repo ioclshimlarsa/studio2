@@ -2,15 +2,34 @@
 
 import { generateCampNotification } from "@/ai/flows/camp-notification-generator";
 import { revalidatePath } from "next/cache";
+import { db } from './firebase';
+import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, writeBatch, Timestamp, getDoc } from 'firebase/firestore';
+
 import type { CampFormData, Registration, SchoolUser, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
-import { mockCamps, mockRegistrations, mockSchoolUsers } from "./data";
 import { SchoolUserSchema } from "./types";
+import { getSchoolUser } from "./data";
 
 
 export async function saveCampAction(data: CampFormData) {
   try {
-    // In a real app, this would save the data to your database
-    console.log("Saving camp:", data);
+    const campCollection = collection(db, 'camps');
+    
+    // Firestore conversion
+    const campDataForDb = {
+        ...data,
+        startDate: Timestamp.fromDate(data.startDate),
+        endDate: Timestamp.fromDate(data.endDate),
+    };
+
+    if (data.id) {
+        // This is an update
+        const campRef = doc(db, 'camps', data.id);
+        await updateDoc(campRef, campDataForDb);
+    } else {
+        // This is a new document
+        await addDoc(campCollection, campDataForDb);
+    }
+
     const districts = data.district.join(', ');
 
     const notificationResult = await generateCampNotification({
@@ -43,25 +62,37 @@ export async function saveCampAction(data: CampFormData) {
 
 export async function deleteCampAction(campId: string) {
     try {
-        // In a real app, this would delete from a database
-        console.log("Deleting camp with ID:", campId);
+        await deleteDoc(doc(db, "camps", campId));
         revalidatePath("/admin");
         revalidatePath("/school");
         return { success: true, message: "Camp deleted successfully." };
     } catch (error) {
+        console.error("Error deleting camp:", error);
         return { success: false, message: "Failed to delete camp." };
     }
 }
 
 export async function registerStudentsAction(data: StudentRegistrationData): Promise<{success: boolean, message: string, newRegistration?: Registration}> {
   try {
-    const camp = mockCamps.find(c => c.id === data.campId);
-    if (!camp) {
+    const campRef = doc(db, "camps", data.campId);
+    const campSnap = await getDoc(campRef);
+
+    if (!campSnap.exists()) {
         return { success: false, message: "Camp not found." };
     }
+    const camp = { ...campSnap.data(), id: campSnap.id } as Camp;
+    camp.startDate = (campSnap.data().startDate as Timestamp).toDate(); // convert timestamp
+    camp.endDate = (campSnap.data().endDate as Timestamp).toDate(); // convert timestamp
+    
+    // Check if camp is still upcoming
+    const now = new Date();
+    if (now > camp.startDate) {
+      return { success: false, message: "Registration failed. This camp has already started or is over." };
+    }
 
-    const currentRegistrations = mockRegistrations.filter(r => r.campId === data.campId);
-    const currentParticipantCount = currentRegistrations.reduce((sum, reg) => sum + reg.students.length, 0);
+    const registrationsQuery = query(collection(db, "registrations"), where("campId", "==", data.campId));
+    const registrationsSnapshot = await getDocs(registrationsQuery);
+    const currentParticipantCount = registrationsSnapshot.docs.reduce((sum, doc) => sum + doc.data().students.length, 0);
 
     const newParticipantCount = data.students.length;
 
@@ -71,23 +102,35 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
     }
 
     // In a real app, you'd get the school ID and name from the logged-in user session
-    const schoolId = `school-${Math.random().toString(36).substr(2, 5)}`;
-    const schoolUser = mockSchoolUsers.find(u => u.id === 'school-1') ?? mockSchoolUsers[0];
+    // For this prototype, we'll use a hardcoded school user.
+    const schoolUser = await getSchoolUser('school-1'); // Assuming a default school user for now.
+    
+    if (!schoolUser) {
+        return { success: false, message: "Could not identify the school. Please log in again." };
+    }
 
-
-    const newRegistration: Registration = {
+    const newRegistrationData = {
         campId: data.campId,
-        schoolId: schoolId,
+        schoolId: schoolUser.id,
         schoolName: schoolUser.schoolName,
-        students: data.students,
+        students: data.students.map(s => ({
+            ...s,
+            dob: Timestamp.fromDate(s.dob) // Convert date to Firestore Timestamp
+        })),
     };
     
-    mockRegistrations.push(newRegistration);
+    const docRef = await addDoc(collection(db, "registrations"), newRegistrationData);
     
-    console.log("Registering students:", data);
     revalidatePath("/school");
     revalidatePath("/admin");
-    return { success: true, message: "Students registered successfully!", newRegistration };
+    
+    const finalRegistration = {
+        ...newRegistrationData,
+        id: docRef.id,
+        students: data.students, // return dates as Date objects
+    }
+    
+    return { success: true, message: "Students registered successfully!", newRegistration: finalRegistration };
   } catch (error) {
     console.error(error);
     return { success: false, message: "Failed to register students." };
@@ -96,21 +139,21 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
 
 export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ success: boolean; message: string; newUser?: SchoolUser; }> {
   try {
-    console.log("Saving school user:", data);
-
-    const newUser: SchoolUser = {
-      id: `school-${Math.random().toString(36).substr(2, 9)}`,
+    const newUser: Omit<SchoolUser, 'id'> = {
       status: 'Active',
       createdAt: new Date(),
       ...data
     };
     
-    mockSchoolUsers.unshift(newUser);
+    const docRef = await addDoc(collection(db, "schoolUsers"), {
+        ...newUser,
+        createdAt: Timestamp.fromDate(newUser.createdAt)
+    });
 
     console.log(`A new school was added in ${data.district}. A notification should be sent.`);
 
     revalidatePath("/admin");
-    return { success: true, message: `School user "${data.schoolName}" created successfully!`, newUser };
+    return { success: true, message: `School user "${data.schoolName}" created successfully!`, newUser: { ...newUser, id: docRef.id } };
   } catch (error) {
     console.error("Error saving school user:", error);
     return { success: false, message: "An error occurred while creating the school user." };
@@ -137,14 +180,24 @@ export async function bulkAddSchoolUsersAction(
       return { success: false, message: "No valid user data found in the CSV file." };
     }
 
-    const newUsers: SchoolUser[] = validUsersData.map(data => ({
-      id: `school-${Math.random().toString(36).substr(2, 9)}`,
-      status: 'Active', 
-      createdAt: new Date(),
-      ...data,
-    }));
+    const batch = writeBatch(db);
+    const newUsers: SchoolUser[] = [];
 
-    mockSchoolUsers.unshift(...newUsers);
+    validUsersData.forEach(data => {
+        const newUser: Omit<SchoolUser, 'id'> = {
+            status: 'Active',
+            createdAt: new Date(),
+            ...data
+        };
+        const docRef = doc(collection(db, "schoolUsers"));
+        batch.set(docRef, {
+            ...newUser,
+            createdAt: Timestamp.fromDate(newUser.createdAt)
+        });
+        newUsers.push({ ...newUser, id: docRef.id });
+    });
+
+    await batch.commit();
 
     console.log(`${newUsers.length} new schools were added via bulk upload.`);
     
@@ -162,20 +215,19 @@ export async function bulkAddSchoolUsersAction(
 
 export async function updateSchoolUserStatusAction(userId: string, status: SchoolUserStatus) {
     try {
-        console.log(`Updating user ${userId} status to ${status}`);
-        const userIndex = mockSchoolUsers.findIndex(u => u.id === userId);
-        if (userIndex > -1) {
-            mockSchoolUsers[userIndex].status = status;
-        }
+        const userRef = doc(db, "schoolUsers", userId);
+        await updateDoc(userRef, { status: status });
         revalidatePath("/admin");
         return { success: true, message: `User status updated to ${status}.` };
     } catch (error) {
+        console.error("Error updating user status:", error);
         return { success: false, message: "Failed to update user status." };
     }
 }
 
 export async function resetSchoolUserPasswordAction(userId: string, newPassword?: string) {
     try {
+        // In a real app, this would integrate with Firebase Auth
         console.log(`Resetting password for user ${userId} to ${newPassword}`);
         revalidatePath("/admin");
         return { success: true, message: "Password has been reset successfully." };
@@ -186,16 +238,11 @@ export async function resetSchoolUserPasswordAction(userId: string, newPassword?
 
 export async function deleteSchoolUserAction(userId: string) {
     try {
-        console.log(`Deleting user ${userId}`);
-        const userIndex = mockSchoolUsers.findIndex(u => u.id === userId);
-        if (userIndex > -1) {
-            mockSchoolUsers.splice(userIndex, 1);
-        } else {
-            return { success: false, message: "User not found." };
-        }
+        await deleteDoc(doc(db, "schoolUsers", userId));
         revalidatePath("/admin");
         return { success: true, message: "User has been deleted successfully." };
     } catch (error) {
+        console.error("Error deleting user:", error);
         return { success: false, message: "Failed to delete user." };
     }
 }

@@ -1,11 +1,6 @@
+import { db } from './firebase';
+import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore';
 import type { Camp, Registration, SchoolUser } from './types';
-
-const today = new Date();
-const addDays = (date: Date, days: number) => {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-};
 
 export const punjabDistricts = [
   "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", 
@@ -15,192 +10,125 @@ export const punjabDistricts = [
   "Sahibzada Ajit Singh Nagar (Mohali)", "Sangrur", "Shaheed Bhagat Singh Nagar", "Tarn Taran"
 ];
 
-// Mock data for camps
-export const mockCamps: Camp[] = [
-  {
-    id: '1',
-    name: 'Summer Scout Adventure',
-    description: 'A week-long camp focusing on outdoor skills, leadership, and teamwork.',
-    location: 'Scout Complex, Amritsar',
-    district: ['Amritsar'],
-    eligibilityCriteria: 'Students aged 12-15 from any school in the Amritsar district.',
-    contactPerson: 'Mr. Avtar Singh',
-    contactNumber: '9876543210',
-    contactEmail: 'adventure@punjabscouts.org',
-    startDate: addDays(today, 10),
-    endDate: addDays(today, 17),
-    status: 'Upcoming',
-    maxParticipants: 50,
-  },
-  {
-    id: '2',
-    name: 'Digital Literacy Workshop',
-    description: 'A 3-day workshop to teach students the basics of computer science and online safety.',
-    location: 'Ludhiana Public School',
-    district: ['Ludhiana'],
-    eligibilityCriteria: 'Open to all high school students in Ludhiana.',
-    contactPerson: 'Ms. Geeta Sharma',
-    contactNumber: '9876543211',
-    contactEmail: 'digital@punjabedu.org',
-    startDate: addDays(today, -1),
-    endDate: addDays(today, 2),
-    status: 'Ongoing',
-    maxParticipants: 30,
-  },
-  {
-    id: '3',
-    name: 'Youth Leadership Summit',
-    description: 'A weekend summit for aspiring student leaders to network and learn from experts.',
-    location: 'Jalandhar Convention Center',
-    district: ['Jalandhar', 'Kapurthala'],
-    eligibilityCriteria: 'Nominated student council members from Jalandhar and Kapurthala district schools.',
-    contactPerson: 'Mr. Raj Kumar',
-    contactNumber: '9876543212',
-    contactEmail: 'leaders@punjabconnect.org',
-    startDate: addDays(today, 30),
-    endDate: addDays(today, 32),
-    status: 'Upcoming',
-    maxParticipants: 100,
-  },
-  {
-    id: '4',
-    name: 'Winter Sports Camp',
-    description: 'Experience the thrill of winter sports and learn new skills.',
-    location: 'Pathankot Sports Complex',
-    district: ['Pathankot'],
-    eligibilityCriteria: 'Students aged 14-18 with an interest in sports.',
-    contactPerson: 'Mr. Vikram Batra',
-    contactNumber: '9876543213',
-    contactEmail: 'sports@punjabconnect.org',
-    startDate: addDays(today, -40),
-    endDate: addDays(today, -33),
-    status: 'Past',
-    maxParticipants: 40,
-  },
-    {
-    id: '5',
-    name: 'Heritage and Culture Tour',
-    description: 'Explore the rich cultural heritage of Punjab through visits to historical sites.',
-    location: 'Sheesh Mahal, Patiala',
-    district: ['Patiala'],
-    eligibilityCriteria: 'All students from Patiala are welcome.',
-    contactPerson: 'Ms. Simran Kaur',
-    contactNumber: '9876543214',
-    contactEmail: 'culture@punjabconnect.org',
-    startDate: addDays(today, -90),
-    endDate: addDays(today, -85),
-    status: 'Past',
-    maxParticipants: 60,
-  },
-];
-
-// Mock data for registrations
-export const mockRegistrations: Registration[] = [
-    {
-        campId: '2',
-        schoolId: 'school-1',
-        schoolName: 'Govt. Model Senior Secondary School',
-        students: Array.from({length: 28}, (_, i) => ({name: `Student ${i+1}`, fatherName: `Father ${i+1}`, dob: new Date(2008, i % 12, i + 1)}))
-    },
-    {
-        campId: '4',
-        schoolId: 'school-1',
-        schoolName: 'Govt. Model Senior Secondary School',
-        students: [
-            { name: 'Rohan Sharma', fatherName: 'Anil Sharma', dob: new Date(2007, 5, 12) },
-            { name: 'Priya Verma', fatherName: 'Sunil Verma', dob: new Date(2006, 8, 24) },
-        ]
-    },
-    {
-        campId: '5',
-        schoolId: 'school-2',
-        schoolName: 'Sacred Heart Convent School',
-        students: [
-            { name: 'Aarav Singh', fatherName: 'Balwinder Singh', dob: new Date(2009, 1, 3) },
-        ]
-    }
-];
-
-export const mockSchoolUsers: SchoolUser[] = [
-  {
-    id: 'school-1',
-    schoolName: 'Govt. Model Senior Secondary School',
-    location: 'Sector 16, Chandigarh',
-    district: 'Sahibzada Ajit Singh Nagar (Mohali)',
-    principalName: 'Mrs. Sunita Sharma',
-    trainerName: 'Mr. Rajesh Kumar',
-    trainerContact: '9812345678',
-    schoolEmail: 'principal.gmsss16@example.com',
-    status: 'Active',
-    createdAt: addDays(today, -150),
-  },
-  {
-    id: 'school-2',
-    schoolName: 'Sacred Heart Convent School',
-    location: 'Sarabha Nagar, Ludhiana',
-    district: 'Ludhiana',
-    principalName: 'Sr. Jessy',
-    trainerName: 'Ms. Maria Gomes',
-    trainerContact: '9876512345',
-    schoolEmail: 'contact@shcsldh.com',
-    status: 'Active',
-    createdAt: addDays(today, -120),
-  },
-  {
-    id: 'school-3',
-    schoolName: 'Delhi Public School, Amritsar',
-    location: 'Manawala, Amritsar',
-    district: 'Amritsar',
-    principalName: 'Mr. Vikram Singh',
-    trainerName: 'Mr. Harpreet Singh',
-    trainerContact: '9988776655',
-    schoolEmail: 'info@dpsamritsar.com',
-    status: 'Inactive',
-    createdAt: addDays(today, -90),
-  },
-    {
-    id: 'school-4',
-    schoolName: 'Apeejay School, Jalandhar',
-    location: 'Mahavir Marg, Jalandhar',
-    district: 'Jalandhar',
-    principalName: 'Mr. Girish Kumar',
-    trainerName: 'Ms. Anjali Verma',
-    trainerContact: '9123456789',
-    schoolEmail: 'admissions.jalandhar@apeejay.edu',
-    status: 'Blocked',
-    createdAt: addDays(today, -60),
-  }
-];
-
-// Simulate fetching all camps
-export async function getCamps(): Promise<Camp[]> {
-  const now = new Date();
-  // In a real app, this would fetch from a database
-  return mockCamps.map(camp => {
-    let status: 'Upcoming' | 'Ongoing' | 'Past';
+const firestoreToCamp = (doc: any): Camp => {
+    const data = doc.data();
+    const camp: Camp = {
+        id: doc.id,
+        name: data.name,
+        description: data.description,
+        location: data.location,
+        district: data.district,
+        eligibilityCriteria: data.eligibilityCriteria,
+        contactPerson: data.contactPerson,
+        contactNumber: data.contactNumber,
+        contactEmail: data.contactEmail,
+        startDate: (data.startDate as Timestamp).toDate(),
+        endDate: (data.endDate as Timestamp).toDate(),
+        maxParticipants: data.maxParticipants,
+        status: 'Upcoming' // This will be calculated
+    };
+    const now = new Date();
     if (now < camp.startDate) {
-      status = 'Upcoming';
+      camp.status = 'Upcoming';
     } else if (now >= camp.startDate && now <= camp.endDate) {
-      status = 'Ongoing';
+      camp.status = 'Ongoing';
     } else {
-      status = 'Past';
+      camp.status = 'Past';
     }
-    return { ...camp, status };
-  }).sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+    return camp;
+};
+
+const firestoreToRegistration = (doc: any): Registration => {
+    const data = doc.data();
+    return {
+        id: doc.id,
+        campId: data.campId,
+        schoolId: data.schoolId,
+        schoolName: data.schoolName,
+        students: data.students.map((s: any) => ({
+            ...s,
+            dob: (s.dob as Timestamp).toDate()
+        }))
+    };
+};
+
+const firestoreToSchoolUser = (doc: any): SchoolUser => {
+    const data = doc.data();
+    return {
+        id: doc.id,
+        schoolName: data.schoolName,
+        location: data.location,
+        district: data.district,
+        principalName: data.principalName,
+        trainerName: data.trainerName,
+        trainerContact: data.trainerContact,
+        schoolEmail: data.schoolEmail,
+        status: data.status,
+        createdAt: (data.createdAt as Timestamp).toDate(),
+    };
+};
+
+
+// Fetch all camps
+export async function getCamps(): Promise<Camp[]> {
+  try {
+    const campsCol = collection(db, 'camps');
+    const campSnapshot = await getDocs(campsCol);
+    const camps = campSnapshot.docs.map(doc => firestoreToCamp(doc));
+    return camps.sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+  } catch (error) {
+    console.error("Error fetching camps: ", error);
+    return [];
+  }
 }
 
-// Simulate fetching registrations for a camp
+// Fetch registrations for a specific camp
 export async function getRegistrationsForCamp(campId: string): Promise<Registration[]> {
-    return mockRegistrations.filter(r => r.campId === campId);
+  try {
+    const q = query(collection(db, "registrations"), where("campId", "==", campId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => firestoreToRegistration(doc));
+  } catch (error) {
+    console.error("Error fetching registrations for camp: ", error);
+    return [];
+  }
 }
 
-// Simulate fetching all registrations
+// Fetch all registrations
 export async function getRegistrations(): Promise<Registration[]> {
-  return mockRegistrations;
+  try {
+    const registrationsCol = collection(db, 'registrations');
+    const registrationSnapshot = await getDocs(registrationsCol);
+    return registrationSnapshot.docs.map(doc => firestoreToRegistration(doc));
+  } catch (error) {
+    console.error("Error fetching all registrations: ", error);
+    return [];
+  }
 }
 
-// Simulate fetching all school users
+// Fetch all school users
 export async function getSchoolUsers(): Promise<SchoolUser[]> {
-  // In a real app, this would fetch from a database
-  return mockSchoolUsers.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  try {
+    const usersCol = collection(db, 'schoolUsers');
+    const userSnapshot = await getDocs(usersCol);
+    const users = userSnapshot.docs.map(doc => firestoreToSchoolUser(doc));
+    return users.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  } catch (error) {
+    console.error("Error fetching school users: ", error);
+    return [];
+  }
+}
+
+export async function getSchoolUser(id: string): Promise<SchoolUser | null> {
+    try {
+        const docRef = doc(db, 'schoolUsers', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return firestoreToSchoolUser(docSnap);
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching school user:", error);
+        return null;
+    }
 }

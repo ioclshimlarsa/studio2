@@ -113,7 +113,7 @@ function CampList({ camps, registrations, onRegister }: { camps: Camp[], registr
 export function CampDashboard({ initialCamps, initialRegistrations }: CampDashboardProps) {
   const { toast } = useToast();
   const [camps] = useState<Camp[]>(initialCamps);
-  const [registrations, setRegistrations] = useState<Registration[]>(initialRegistrations);
+  const [registrations] = useState<Registration[]>(initialRegistrations);
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -149,9 +149,6 @@ export function CampDashboard({ initialCamps, initialRegistrations }: CampDashbo
     startTransition(async () => {
       const result = await registerStudentsAction(data);
       if (result.success) {
-        if (result.newRegistration) {
-            setRegistrations(prev => [...prev, result.newRegistration!]);
-        }
         toast({
           title: 'Success!',
           description: result.message,

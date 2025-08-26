@@ -88,7 +88,12 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
 
   const handleEdit = (camp: Camp) => {
     setSelectedCamp(camp);
-    form.reset(camp);
+    form.reset({
+        ...camp,
+        // Ensure dates are Date objects if they're not already
+        startDate: new Date(camp.startDate), 
+        endDate: new Date(camp.endDate),
+    });
     setFormOpen(true);
   };
   
@@ -104,6 +109,8 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
       contactNumber: '',
       contactEmail: '',
       maxParticipants: 50,
+      startDate: undefined,
+      endDate: undefined,
     });
     setFormOpen(true);
   };
@@ -227,6 +234,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(processForm)} className="space-y-4">
+              <input type="hidden" {...form.register("id")} />
               <ScrollArea className="h-[60vh] p-4">
                 <div className="space-y-4">
                   <FormField control={form.control} name="name" render={({ field }) => (
@@ -357,7 +365,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
             <ScrollArea className="h-full">
               {registrations.filter(r => r.campId === selectedCamp?.id).length > 0 ? (
                   registrations.filter(r => r.campId === selectedCamp?.id).map(reg => (
-                      <div key={reg.schoolId} className="mb-4">
+                      <div key={reg.id} className="mb-4">
                           <h3 className="font-bold my-2 text-primary">{reg.schoolName}</h3>
                           <Table>
                             <TableHeader>

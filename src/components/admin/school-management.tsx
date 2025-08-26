@@ -79,7 +79,7 @@ type SchoolManagementProps = {
 
 export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) {
   const { toast } = useToast();
-  const [schoolUsers, setSchoolUsers] = useState<SchoolUser[]>(initialSchoolUsers);
+  const [schoolUsers] = useState<SchoolUser[]>(initialSchoolUsers);
   const [isFormOpen, setFormOpen] = useState(false);
   const [isBulkOpen, setBulkOpen] = useState(false);
   const [isAlertOpen, setAlertOpen] = useState(false);
@@ -145,7 +145,6 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
     startTransition(async () => {
       const result = await saveSchoolUserAction(data);
       if (result.success && result.newUser) {
-        setSchoolUsers(prev => [result.newUser!, ...prev]);
         toast({ title: 'Success!', description: result.message });
         setFormOpen(false);
       } else {
@@ -168,8 +167,7 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
                 const parsedData = results.data as SchoolUserFormData[];
                 const result = await bulkAddSchoolUsersAction(parsedData);
                 
-                if (result.success && result.newUsers) {
-                    setSchoolUsers(prev => [...result.newUsers!, ...prev]);
+                if (result.success) {
                     toast({ title: 'Success!', description: result.message });
                     setBulkOpen(false);
                 } else {
@@ -188,7 +186,6 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
     startTransition(async () => {
         const result = await updateSchoolUserStatusAction(userId, status);
         if (result.success) {
-            setSchoolUsers(prev => prev.map(u => u.id === userId ? { ...u, status } : u));
             toast({ title: 'Success', description: result.message });
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
@@ -217,7 +214,6 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
     startTransition(async () => {
         const result = await deleteSchoolUserAction(userId);
         if (result.success) {
-            setSchoolUsers(prev => prev.filter(u => u.id !== userId));
             toast({ title: 'Success', description: result.message });
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
