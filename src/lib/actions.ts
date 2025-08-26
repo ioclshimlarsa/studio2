@@ -39,7 +39,7 @@ export async function saveCampAction(data: CampFormData) {
     };
     // remove id if it exists, as we don't want to save it to the document
     if ('id' in campDataForDb) {
-      delete campDataForDb.id;
+      delete (campDataForDb as { id?: string }).id;
     }
 
 
@@ -126,17 +126,15 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
         return { success: false, message: `Registration failed. Only ${availableSlots} slots remaining.` };
     }
 
-    const schoolUsers = await getSchoolUsers();
-    const schoolUser = schoolUsers.find(u => u.schoolName === 'Sacred Heart Convent School');
+    // In a real app, you would get the logged-in user's ID from the session.
+    // For this prototype, we'll assign a placeholder ID and name.
+    const schoolId = 'placeholder-school-id';
+    const schoolName = 'Registered School';
     
-    if (!schoolUser) {
-        return { success: false, message: "Could not identify the school. Please log in again." };
-    }
-
     const newRegistrationData = {
         campId: data.campId,
-        schoolId: schoolUser.id,
-        schoolName: schoolUser.schoolName,
+        schoolId: schoolId,
+        schoolName: schoolName,
         students: data.students.map(s => ({
             ...s,
             dob: Timestamp.fromDate(s.dob) // Convert date to Firestore Timestamp
