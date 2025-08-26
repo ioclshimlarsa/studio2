@@ -1,5 +1,4 @@
-
-import { db } from './firebase';
+import { adminDb } from './firebase';
 import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore';
 import type { Camp, Registration, SchoolUser } from './types';
 
@@ -77,11 +76,8 @@ export const punjabDistricts = [
 // Fetch all camps
 export async function getCamps(): Promise<Camp[]> {
   try {
-    const campsCol = collection(db, 'camps');
+    const campsCol = collection(adminDb, 'camps');
     const campSnapshot = await getDocs(campsCol);
-    if (campSnapshot.empty) {
-        return [];
-    }
     const camps = campSnapshot.docs.map(doc => firestoreToCamp(doc));
     return camps.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
   } catch (error) {
@@ -93,11 +89,8 @@ export async function getCamps(): Promise<Camp[]> {
 // Fetch registrations for a specific camp
 export async function getRegistrationsForCamp(campId: string): Promise<Registration[]> {
   try {
-    const q = query(collection(db, "registrations"), where("campId", "==", campId));
+    const q = query(collection(adminDb, "registrations"), where("campId", "==", campId));
     const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
-        return [];
-    }
     return querySnapshot.docs.map(doc => firestoreToRegistration(doc));
   } catch (error) {
     console.error("Error fetching registrations for camp: ", error);
@@ -108,11 +101,8 @@ export async function getRegistrationsForCamp(campId: string): Promise<Registrat
 // Fetch all registrations
 export async function getRegistrations(): Promise<Registration[]> {
   try {
-    const registrationsCol = collection(db, 'registrations');
+    const registrationsCol = collection(adminDb, 'registrations');
     const registrationSnapshot = await getDocs(registrationsCol);
-    if (registrationSnapshot.empty) {
-        return [];
-    }
     return registrationSnapshot.docs.map(doc => firestoreToRegistration(doc));
   } catch (error) {
     console.error("Error fetching all registrations: ", error);
@@ -123,11 +113,8 @@ export async function getRegistrations(): Promise<Registration[]> {
 // Fetch all school users
 export async function getSchoolUsers(): Promise<SchoolUser[]> {
   try {
-    const usersCol = collection(db, 'schoolUsers');
+    const usersCol = collection(adminDb, 'schoolUsers');
     const userSnapshot = await getDocs(usersCol);
-    if (userSnapshot.empty) {
-        return [];
-    }
     const users = userSnapshot.docs.map(doc => firestoreToSchoolUser(doc));
     return users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {
@@ -138,7 +125,7 @@ export async function getSchoolUsers(): Promise<SchoolUser[]> {
 
 export async function getSchoolUser(id: string): Promise<SchoolUser | null> {
     try {
-        const docRef = doc(db, 'schoolUsers', id);
+        const docRef = doc(adminDb, 'schoolUsers', id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             return firestoreToSchoolUser(docSnap);
