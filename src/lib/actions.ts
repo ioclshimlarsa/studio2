@@ -2,7 +2,7 @@
 
 import { generateCampNotification } from "@/ai/flows/camp-notification-generator";
 import { revalidatePath } from "next/cache";
-import { CampFormData, StudentRegistrationData } from "./types";
+import type { CampFormData, StudentRegistrationData } from "./types";
 
 
 export async function saveCampAction(data: CampFormData) {
