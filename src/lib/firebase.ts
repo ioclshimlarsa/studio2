@@ -5,12 +5,12 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  projectId: "campconnect-punjab",
-  appId: "1:278174860045:web:47b30a9ff54267892ba644",
-  storageBucket: "campconnect-punjab.firebasestorage.app",
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: "campconnect-punjab.firebaseapp.com",
-  messagingSenderId: "278174860045",
+  "projectId": "campconnect-punjab",
+  "appId": "1:278174860045:web:47b30a9ff54267892ba644",
+  "storageBucket": "campconnect-punjab.firebasestorage.app",
+  "apiKey": "AIzaSyA-iibFePjLWKBeZlWiK6Lqgjc3TPvBPRc",
+  "authDomain": "campconnect-punjab.firebaseapp.com",
+  "messagingSenderId": "278174860045"
 };
 
 // Initialize Firebase
