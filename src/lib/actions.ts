@@ -210,12 +210,19 @@ export async function bulkAddSchoolUsersAction(
     const newUsers: SchoolUser[] = [];
 
     for (const data of usersData) {
-      const { password, confirmPassword, ...userData } = data;
+      // Correctly create the user object for the database, omitting password fields
       const newUser: Omit<SchoolUser, 'id'> = {
+        schoolName: data.schoolName,
+        location: data.location,
+        district: data.district,
+        principalName: data.principalName,
+        trainerName: data.trainerName,
+        trainerContact: data.trainerContact,
+        schoolEmail: data.schoolEmail,
         status: 'Active',
         createdAt: new Date(),
-        ...userData,
       };
+      
       const docRef = doc(collection(db, 'schoolUsers'));
       batch.set(docRef, {
         ...newUser,
