@@ -61,7 +61,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
     className,
     placeholder = "Select options",
     ...props
-  }) => {
+  }, ref) => {
     const [open, setOpen] = React.useState(false);
 
     const handleSelect = (value: string) => {
@@ -75,6 +75,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            ref={ref}
             variant="outline"
             role="combobox"
             aria-expanded={open}
@@ -135,3 +136,4 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
     );
   }
 );
+MultiSelect.displayName = "MultiSelect";
