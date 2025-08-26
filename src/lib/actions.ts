@@ -6,14 +6,13 @@ import { db } from './firebase';
 import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, writeBatch, Timestamp, getDoc } from 'firebase/firestore';
 
 import type { Camp, CampFormData, Registration, SchoolUser, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
-import { getSchoolUsers } from "./data";
 
 export async function loginAction(email: string): Promise<{ success: boolean; message: string }> {
     try {
-        const schoolUsers = await getSchoolUsers();
-        const userExists = schoolUsers.some(user => user.schoolEmail.toLowerCase() === email.toLowerCase());
-        
-        if (userExists) {
+        const schoolUsersQuery = query(collection(db, "schoolUsers"), where("schoolEmail", "==", email.toLowerCase()));
+        const querySnapshot = await getDocs(schoolUsersQuery);
+
+        if (!querySnapshot.empty) {
             // In a real app with Firebase Auth, you would use signInWithEmailAndPassword here.
             // For this prototype, we're just checking if the user email exists in our Firestore collection.
             return { success: true, message: "Login successful." };
@@ -126,10 +125,10 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
         return { success: false, message: `Registration failed. Only ${availableSlots} slots remaining.` };
     }
 
-    // In a real app, you would get the logged-in user's ID from the session.
-    // For this prototype, we'll assign a placeholder ID and name.
-    const schoolId = 'placeholder-school-id';
-    const schoolName = 'Registered School';
+    // In a real app, you would get the logged-in user's ID and name from the session.
+    // For this prototype, we'll assign a placeholder.
+    const schoolId = 'placeholder-school-id'; 
+    const schoolName = "Placeholder School Name";
     
     const newRegistrationData = {
         campId: data.campId,
@@ -170,7 +169,7 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
       trainerContact: data.trainerContact,
       schoolEmail: data.schoolEmail,
       status: 'Active' as SchoolUserStatus,
-      createdAt: Timestamp.now(), // Use Firestore Timestamp
+      createdAt: Timestamp.now(),
     };
 
     const docRef = await addDoc(collection(db, "schoolUsers"), newUserToSave);
@@ -180,7 +179,7 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
     const savedUser: SchoolUser = {
       id: docRef.id,
       ...newUserToSave,
-      createdAt: newUserToSave.createdAt.toDate(), // Convert back to Date for the return object
+      createdAt: newUserToSave.createdAt.toDate(),
     };
 
     const message = `School user "${savedUser.schoolName}" created successfully! They can now log in with the email ${savedUser.schoolEmail}.`;
@@ -212,7 +211,7 @@ export async function bulkAddSchoolUsersAction(
         trainerContact: data.trainerContact,
         schoolEmail: data.schoolEmail,
         status: 'Active' as SchoolUserStatus,
-        createdAt: Timestamp.now(), // Use Firestore Timestamp
+        createdAt: Timestamp.now(),
       };
       
       const docRef = doc(collection(db, 'schoolUsers'));
