@@ -13,20 +13,7 @@ const firebaseConfig: FirebaseOptions = {
   messagingSenderId: "278174860045",
 };
 
-// Add server-side specific credentials if they exist
-if (typeof window === "undefined" && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    try {
-        const serviceAccount = JSON.parse(
-          Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'base64').toString('utf-8')
-        );
-        (firebaseConfig as any).serviceAccountId = serviceAccount.client_email;
-    } catch (e) {
-        console.warn("Could not parse GOOGLE_APPLICATION_CREDENTIALS. Server-side authentication may fail.", e);
-    }
-}
-
-
-// Initialize Firebase
+// Initialize Firebase for the client side
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
