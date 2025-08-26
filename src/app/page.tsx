@@ -86,9 +86,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter>
              <p className="text-xs text-muted-foreground w-full text-center">
-                Admin: Use admin01 / password123. 
-                <br />
-                School: Use the registered school email. Password not required for prototype.
+                Contact us at Bharat Scouts and Guides Punjab for creating login credentials for your school.
              </p>
           </CardFooter>
         </Card>
