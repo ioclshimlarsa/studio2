@@ -27,27 +27,30 @@ export default function LoginPage() {
     if (role === 'admin') {
       if (username === 'admin01' && password === 'password123') {
         router.push('/admin');
-        return;
+        // No need to set isLoading to false here, as we are navigating away.
       } else {
         toast({ variant: 'destructive', title: "Login Failed", description: "Invalid admin credentials." });
+        setIsLoading(false); // This was missing
+      }
+      return; // Exit after admin logic
+    } 
+    
+    // School login logic
+    try {
+      const result = await loginAction(username);
+      if (result.success) {
+        toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
+        router.push('/school');
+      } else {
+        toast({ variant: 'destructive', title: "Login Failed", description: result.message });
         setIsLoading(false);
       }
-    } else { // role === 'school'
-      try {
-        const result = await loginAction(username);
-        if (result.success) {
-          toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
-          router.push('/school');
-        } else {
-          toast({ variant: 'destructive', title: "Login Failed", description: result.message });
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error(error);
-        toast({ variant: 'destructive', title: "Error", description: "An unexpected error occurred." });
-        setIsLoading(false);
-      }
+    } catch (error) {
+      console.error(error);
+      toast({ variant: 'destructive', title: "Error", description: "An unexpected error occurred." });
+      setIsLoading(false);
     }
+    
   };
 
   return (
