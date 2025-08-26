@@ -1,3 +1,4 @@
+
 import { getCamps, getRegistrations, getSchoolUsers } from '@/lib/data';
 import { CampManagement } from '@/components/admin/camp-management';
 import { SchoolManagement } from '@/components/admin/school-management';
