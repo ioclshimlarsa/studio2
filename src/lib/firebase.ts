@@ -13,13 +13,15 @@ const firebaseConfig: FirebaseOptions = {
   messagingSenderId: "278174860045",
 };
 
-// Add server-side specific credentials if they exist (for Vercel, etc.)
+// Add server-side specific credentials if they exist
 if (typeof window === "undefined" && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     try {
-        const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-        firebaseConfig.serviceAccountId = serviceAccount.client_email;
+        const serviceAccount = JSON.parse(
+          Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'base64').toString('utf-8')
+        );
+        (firebaseConfig as any).serviceAccountId = serviceAccount.client_email;
     } catch (e) {
-        console.warn("Could not parse GOOGLE_APPLICATION_CREDENTIALS. Server-side authentication may fail.");
+        console.warn("Could not parse GOOGLE_APPLICATION_CREDENTIALS. Server-side authentication may fail.", e);
     }
 }
 
