@@ -1,13 +1,11 @@
-import { getCamps, getRegistrationsForCamp, getSchoolUsers } from '@/lib/data';
+import { getCamps, getRegistrations, getSchoolUsers } from '@/lib/data';
 import { CampManagement } from '@/components/admin/camp-management';
 import { SchoolManagement } from '@/components/admin/school-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default async function AdminDashboardPage() {
   const camps = await getCamps();
-  const allRegistrations = await Promise.all(
-    camps.map(camp => getRegistrationsForCamp(camp.id))
-  ).then(res => res.flat());
+  const allRegistrations = await getRegistrations();
   const schoolUsers = await getSchoolUsers();
 
   return (
