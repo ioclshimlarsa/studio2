@@ -7,6 +7,14 @@ const addDays = (date: Date, days: number) => {
   return result;
 };
 
+export const punjabDistricts = [
+  "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", 
+  "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", 
+  "Kapurthala", "Ludhiana", "Malerkotla", "Mansa", "Moga", 
+  "Sri Muktsar Sahib", "Pathankot", "Patiala", "Rupnagar", 
+  "Sahibzada Ajit Singh Nagar (Mohali)", "Sangrur", "Shaheed Bhagat Singh Nagar", "Tarn Taran"
+];
+
 // Mock data for camps
 export const mockCamps: Camp[] = [
   {
@@ -14,7 +22,7 @@ export const mockCamps: Camp[] = [
     name: 'Summer Scout Adventure',
     description: 'A week-long camp focusing on outdoor skills, leadership, and teamwork.',
     location: 'Scout Complex, Amritsar',
-    district: 'Amritsar',
+    district: ['Amritsar'],
     eligibilityCriteria: 'Students aged 12-15 from any school in the Amritsar district.',
     contactPerson: 'Mr. Avtar Singh',
     contactNumber: '9876543210',
@@ -28,7 +36,7 @@ export const mockCamps: Camp[] = [
     name: 'Digital Literacy Workshop',
     description: 'A 3-day workshop to teach students the basics of computer science and online safety.',
     location: 'Ludhiana Public School',
-    district: 'Ludhiana',
+    district: ['Ludhiana'],
     eligibilityCriteria: 'Open to all high school students in Ludhiana.',
     contactPerson: 'Ms. Geeta Sharma',
     contactNumber: '9876543211',
@@ -42,7 +50,7 @@ export const mockCamps: Camp[] = [
     name: 'Youth Leadership Summit',
     description: 'A weekend summit for aspiring student leaders to network and learn from experts.',
     location: 'Jalandhar Convention Center',
-    district: 'Jalandhar, Kapurthala',
+    district: ['Jalandhar', 'Kapurthala'],
     eligibilityCriteria: 'Nominated student council members from Jalandhar and Kapurthala district schools.',
     contactPerson: 'Mr. Raj Kumar',
     contactNumber: '9876543212',
@@ -56,7 +64,7 @@ export const mockCamps: Camp[] = [
     name: 'Winter Sports Camp',
     description: 'Experience the thrill of winter sports and learn new skills.',
     location: 'Pathankot Sports Complex',
-    district: 'Pathankot',
+    district: ['Pathankot'],
     eligibilityCriteria: 'Students aged 14-18 with an interest in sports.',
     contactPerson: 'Mr. Vikram Batra',
     contactNumber: '9876543213',
@@ -70,7 +78,7 @@ export const mockCamps: Camp[] = [
     name: 'Heritage and Culture Tour',
     description: 'Explore the rich cultural heritage of Punjab through visits to historical sites.',
     location: 'Sheesh Mahal, Patiala',
-    district: 'Patiala',
+    district: ['Patiala'],
     eligibilityCriteria: 'All students from Patiala are welcome.',
     contactPerson: 'Ms. Simran Kaur',
     contactNumber: '9876543214',

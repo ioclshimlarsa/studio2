@@ -9,12 +9,13 @@ export async function saveCampAction(data: CampFormData) {
   try {
     // In a real app, this would save the data to your database
     console.log("Saving camp:", data);
+    const districts = data.district.join(', ');
 
     const notificationResult = await generateCampNotification({
-      schoolName: `Schools in ${data.district}`,
-      schoolDistrict: data.district,
+      schoolName: `Schools in ${districts}`,
+      schoolDistrict: districts,
       campName: data.name,
-      campDistrict: data.district,
+      campDistrict: districts,
       campDescription: data.description,
       eligibilityCriteria: data.eligibilityCriteria,
       contactEmail: data.contactEmail,

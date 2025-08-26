@@ -47,11 +47,18 @@ import {
 import { MoreHorizontal, PlusCircle, Trash2, FilePenLine, User, Download, Eye } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { ScrollArea } from '../ui/scroll-area';
+import { MultiSelect } from '../ui/multi-select';
+import { punjabDistricts } from '@/lib/data';
 
 type CampManagementProps = {
   initialCamps: Camp[];
   initialRegistrations: Registration[];
 };
+
+const districtOptions = punjabDistricts.map(district => ({
+  value: district,
+  label: district,
+}));
 
 export function CampManagement({ initialCamps, initialRegistrations }: CampManagementProps) {
   const { toast } = useToast();
@@ -69,7 +76,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
       name: '',
       description: '',
       location: '',
-      district: '',
+      district: [],
       eligibilityCriteria: '',
       contactPerson: '',
       contactNumber: '',
@@ -89,7 +96,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
       name: '',
       description: '',
       location: '',
-      district: '',
+      district: [],
       eligibilityCriteria: '',
       contactPerson: '',
       contactNumber: '',
@@ -171,7 +178,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
             {camps.map((camp) => (
               <TableRow key={camp.id}>
                 <TableCell className="font-medium">{camp.name}</TableCell>
-                <TableCell>{camp.district}</TableCell>
+                <TableCell>{camp.district.join(', ')}</TableCell>
                 <TableCell>
                   {camp.startDate.toLocaleDateString()} - {camp.endDate.toLocaleDateString()}
                 </TableCell>
@@ -237,10 +244,20 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
                       </FormItem>
                     )}
                   />
-                  <FormField control={form.control} name="district" render={({ field }) => (
+                  <FormField
+                    control={form.control}
+                    name="district"
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>District(s)</FormLabel>
-                        <FormControl><Input {...field} placeholder="e.g. Ludhiana, Jalandhar, Amritsar" /></FormControl>
+                        <FormControl>
+                          <MultiSelect
+                            options={districtOptions}
+                            selected={field.value}
+                            onChange={field.onChange}
+                            className="w-full"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

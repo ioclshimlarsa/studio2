@@ -41,7 +41,7 @@ function CampCard({ camp, onRegister }: { camp: Camp, onRegister: (camp: Camp) =
             <CardHeader>
                 <CardTitle className="font-headline text-primary">{camp.name}</CardTitle>
                 <CardDescription className="flex items-center pt-1 gap-2 text-sm">
-                    <MapPin className="h-4 w-4" /> {camp.location}, {camp.district}
+                    <MapPin className="h-4 w-4" /> {camp.location}, {camp.district.join(', ')}
                 </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow font-body space-y-3">

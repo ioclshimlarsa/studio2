@@ -5,7 +5,7 @@ export const CampSchema = z.object({
   name: z.string().min(3, { message: "Camp name must be at least 3 characters." }),
   description: z.string().min(10, { message: "Description must be at least 10 characters." }),
   location: z.string().min(3, { message: "Location must be at least 3 characters." }),
-  district: z.string().min(2, { message: "Please enter at least one district." }),
+  district: z.array(z.string()).nonempty({ message: "Please select at least one district." }),
   eligibilityCriteria: z.string().min(10, { message: "Eligibility is required." }),
   contactPerson: z.string().min(3, { message: "Contact person name is required." }),
   contactNumber: z.string().regex(/^\d{10}$/, { message: "Please enter a valid 10-digit phone number." }),
@@ -32,7 +32,7 @@ export interface Camp {
   name: string;
   description: string;
   location: string;
-  district: string;
+  district: string[];
   eligibilityCriteria: string;
   contactPerson: string;
   contactNumber: string;
