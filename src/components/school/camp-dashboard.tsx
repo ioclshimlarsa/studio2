@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerStudentsAction } from '@/lib/actions';
 import { StudentRegistrationSchema, type StudentRegistrationData } from '@/lib/types';
@@ -24,13 +24,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, MapPin, Target, Phone, User, Users } from 'lucide-react';
+import { Calendar, MapPin, Target, Phone, User, Users, PlusCircle, Trash2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
-import { getRegistrationsForCamp } from '@/lib/data';
 
 type CampDashboardProps = {
   initialCamps: Camp[];
@@ -43,6 +44,7 @@ function CampCard({ camp, registrations, onRegister }: { camp: Camp, registratio
     }, [registrations, camp.id]);
 
     const isFull = participantCount >= camp.maxParticipants;
+    const canRegister = camp.status === 'Upcoming' && !isFull;
 
     return (
         <Card className="flex flex-col h-full shadow-md hover:shadow-lg transition-shadow duration-300">
@@ -78,7 +80,7 @@ function CampCard({ camp, registrations, onRegister }: { camp: Camp, registratio
                 </div>
             </CardContent>
             <CardFooter>
-                {camp.status === 'Upcoming' && !isFull && (
+                {canRegister && (
                     <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onRegister(camp)}>
                         Register Students
                     </Button>
@@ -128,13 +130,18 @@ export function CampDashboard({ initialCamps, initialRegistrations }: CampDashbo
     resolver: zodResolver(StudentRegistrationSchema),
     defaultValues: {
         campId: '',
-        studentNames: '',
+        students: [{ name: '', fatherName: '', dob: undefined }],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "students",
   });
 
   const handleRegister = (camp: Camp) => {
     setSelectedCamp(camp);
-    form.reset({ campId: camp.id, studentNames: '' });
+    form.reset({ campId: camp.id, students: [{ name: '', fatherName: '', dob: undefined }] });
     setFormOpen(true);
   };
   
@@ -181,30 +188,75 @@ export function CampDashboard({ initialCamps, initialRegistrations }: CampDashbo
 
       {/* Registration Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="font-headline">Register for {selectedCamp?.name}</DialogTitle>
-            <DialogDescription>Enter the names of the students you wish to register. Please enter one name per line.</DialogDescription>
+            <DialogDescription>Enter the details for each student you wish to register.</DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(processForm)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="studentNames"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Student Names</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="e.g.&#10;Amrit Kaur&#10;Balwinder Singh"
-                        rows={8}
-                        {...field}
+              <ScrollArea className="h-[60vh] p-4 border rounded-md">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="p-4 mb-4 border rounded-lg relative">
+                    <h4 className="font-semibold mb-2">Student {index + 1}</h4>
+                     {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
+                        onClick={() => remove(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                       <FormField
+                          control={form.control}
+                          name={`students.${index}.name`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Student Name</FormLabel>
+                              <FormControl><Input {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                       <FormField
+                          control={form.control}
+                          name={`students.${index}.fatherName`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Father's Name</FormLabel>
+                              <FormControl><Input {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      <FormField
+                        control={form.control}
+                        name={`students.${index}.dob`}
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Date of Birth</FormLabel>
+                            <FormControl>
+                              <DatePicker date={field.value} setDate={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    </div>
+                  </div>
+                ))}
+              </ScrollArea>
+               <Button
+                type="button"
+                variant="outline"
+                onClick={() => append({ name: '', fatherName: '', dob: undefined })}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Another Student
+              </Button>
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setFormOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={isPending}>{isPending ? 'Registering...' : 'Submit Registration'}</Button>

@@ -99,21 +99,24 @@ export const mockRegistrations: Registration[] = [
     {
         campId: '2',
         schoolId: 'school-1',
-        students: Array.from({length: 28}, (_, i) => ({name: `Student ${i+1}`}))
+        schoolName: 'Govt. Model Senior Secondary School',
+        students: Array.from({length: 28}, (_, i) => ({name: `Student ${i+1}`, fatherName: `Father ${i+1}`, dob: new Date(2008, i % 12, i + 1)}))
     },
     {
         campId: '4',
         schoolId: 'school-1',
+        schoolName: 'Govt. Model Senior Secondary School',
         students: [
-            { name: 'Rohan Sharma' },
-            { name: 'Priya Verma' },
+            { name: 'Rohan Sharma', fatherName: 'Anil Sharma', dob: new Date(2007, 5, 12) },
+            { name: 'Priya Verma', fatherName: 'Sunil Verma', dob: new Date(2006, 8, 24) },
         ]
     },
     {
         campId: '5',
         schoolId: 'school-2',
+        schoolName: 'Sacred Heart Convent School',
         students: [
-            { name: 'Aarav Singh' },
+            { name: 'Aarav Singh', fatherName: 'Balwinder Singh', dob: new Date(2009, 1, 3) },
         ]
     }
 ];

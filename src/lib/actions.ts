@@ -63,19 +63,23 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
     const currentRegistrations = mockRegistrations.filter(r => r.campId === data.campId);
     const currentParticipantCount = currentRegistrations.reduce((sum, reg) => sum + reg.students.length, 0);
 
-    const newStudentNames = data.studentNames.split('\n').map(name => name.trim()).filter(name => name);
-    const newParticipantCount = newStudentNames.length;
+    const newParticipantCount = data.students.length;
 
     if (currentParticipantCount + newParticipantCount > camp.maxParticipants) {
         const availableSlots = camp.maxParticipants - currentParticipantCount;
         return { success: false, message: `Registration failed. Only ${availableSlots} slots remaining.` };
     }
 
+    // In a real app, you'd get the school ID and name from the logged-in user session
+    const schoolId = `school-${Math.random().toString(36).substr(2, 5)}`;
+    const schoolUser = mockSchoolUsers.find(u => u.id === 'school-1') ?? mockSchoolUsers[0];
+
+
     const newRegistration: Registration = {
         campId: data.campId,
-        // In a real app, you'd get the school ID from the logged-in user
-        schoolId: `school-${Math.random().toString(36).substr(2, 5)}`,
-        students: newStudentNames.map(name => ({ name })),
+        schoolId: schoolId,
+        schoolName: schoolUser.schoolName,
+        students: data.students,
     };
     
     mockRegistrations.push(newRegistration);
@@ -85,6 +89,7 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
     revalidatePath("/admin");
     return { success: true, message: "Students registered successfully!", newRegistration };
   } catch (error) {
+    console.error(error);
     return { success: false, message: "Failed to register students." };
   }
 }

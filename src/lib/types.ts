@@ -20,9 +20,15 @@ export const CampSchema = z.object({
 
 export type CampFormData = z.infer<typeof CampSchema>;
 
+export const StudentSchema = z.object({
+  name: z.string().min(3, "Student name is required."),
+  fatherName: z.string().min(3, "Father's name is required."),
+  dob: z.date({ required_error: "Date of birth is required." }),
+});
+
 export const StudentRegistrationSchema = z.object({
   campId: z.string(),
-  studentNames: z.string().min(1, { message: "Please enter at least one student name." }),
+  students: z.array(StudentSchema).nonempty("Please add at least one student."),
 });
 
 export type StudentRegistrationData = z.infer<typeof StudentRegistrationSchema>;
@@ -57,15 +63,16 @@ export interface Camp {
 }
 
 export interface Student {
-  id: string;
   name: string;
-  schoolId: string;
+  fatherName: string;
+  dob: Date;
 }
 
 export interface Registration {
   campId: string;
   schoolId: string;
-  students: { name: string }[];
+  schoolName: string;
+  students: Student[];
 }
 
 export type SchoolUserStatus = 'Active' | 'Inactive' | 'Blocked';

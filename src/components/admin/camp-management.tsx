@@ -49,6 +49,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { ScrollArea } from '../ui/scroll-area';
 import { MultiSelect } from '../ui/multi-select';
 import { punjabDistricts } from '@/lib/data';
+import { format } from 'date-fns';
 
 type CampManagementProps = {
   initialCamps: Camp[];
@@ -344,7 +345,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
       
       {/* View Participants Dialog */}
        <Dialog open={isDetailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="font-headline">{selectedCamp?.name} - Participants</DialogTitle>
             <DialogDescription>
@@ -353,20 +354,35 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto p-1">
-            {registrations.filter(r => r.campId === selectedCamp?.id).length > 0 ? (
-                registrations.filter(r => r.campId === selectedCamp?.id).map(reg => (
-                    <div key={reg.schoolId}>
-                        <h3 className="font-bold my-2">School ID: {reg.schoolId}</h3>
-                        <ul className="list-disc pl-5">
-                            {reg.students.map((student, index) => (
-                                <li key={index} className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> {student.name}</li>
-                            ))}
-                        </ul>
-                    </div>
-                ))
-            ) : (
-                <p className="text-muted-foreground text-center py-8">No participants registered yet.</p>
-            )}
+            <ScrollArea className="h-full">
+              {registrations.filter(r => r.campId === selectedCamp?.id).length > 0 ? (
+                  registrations.filter(r => r.campId === selectedCamp?.id).map(reg => (
+                      <div key={reg.schoolId} className="mb-4">
+                          <h3 className="font-bold my-2 text-primary">{reg.schoolName}</h3>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Student Name</TableHead>
+                                <TableHead>Father's Name</TableHead>
+                                <TableHead>Date of Birth</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {reg.students.map((student, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{student.name}</TableCell>
+                                    <TableCell>{student.fatherName}</TableCell>
+                                    <TableCell>{format(student.dob, 'PPP')}</TableCell>
+                                  </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                      </div>
+                  ))
+              ) : (
+                  <p className="text-muted-foreground text-center py-8">No participants registered yet.</p>
+              )}
+            </ScrollArea>
           </div>
           <DialogFooter>
             <Button variant="secondary">
