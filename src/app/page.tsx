@@ -30,7 +30,7 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle className="text-3xl font-headline text-primary">Welcome Back</CardTitle>
             <CardDescription className="pt-2 font-body text-base">
-              Select your role and enter your credentials to sign in.
+              This is a prototype. No credentials are required.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -65,11 +65,11 @@ export default function LoginPage() {
             <div className="space-y-4 text-left">
                  <div className="space-y-2">
                     <Label htmlFor="username">Username</Label>
-                    <Input id="username" placeholder="Enter your username" />
+                    <Input id="username" placeholder="Enter your username" disabled />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" placeholder="Enter your password" />
+                    <Input id="password" type="password" placeholder="Enter your password" disabled />
                 </div>
             </div>
             <Button className="w-full" onClick={handleLogin}>
@@ -77,7 +77,7 @@ export default function LoginPage() {
             </Button>
           </CardContent>
           <CardFooter>
-             <p className="text-xs text-muted-foreground w-full text-center">This is a simulated login. Select a role and click the button to proceed.</p>
+             <p className="text-xs text-muted-foreground w-full text-center">Select a role and click the button to proceed.</p>
           </CardFooter>
         </Card>
       </div>
