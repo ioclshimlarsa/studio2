@@ -91,7 +91,6 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
     setSelectedCamp(camp);
     form.reset({
         ...camp,
-        // Ensure dates are Date objects if they're not already
         startDate: new Date(camp.startDate), 
         endDate: new Date(camp.endDate),
     });
@@ -165,8 +164,8 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
     });
   };
   
-  const getParticipantCount = (campId: string) => {
-      return registrations
+  const getParticipantCount = (campId: string, registrationsList: Registration[]) => {
+      return registrationsList
         .filter(r => r.campId === campId)
         .reduce((sum, reg) => sum + reg.students.length, 0);
   }
@@ -195,9 +194,9 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
             {camps.map((camp) => (
               <TableRow key={camp.id}>
                 <TableCell className="font-medium">{camp.name}</TableCell>
-                <TableCell>{getParticipantCount(camp.id)} / {camp.maxParticipants}</TableCell>
+                <TableCell>{getParticipantCount(camp.id, registrations)} / {camp.maxParticipants}</TableCell>
                 <TableCell>
-                  {new Date(camp.startDate).toLocaleDateString()} - {new Date(camp.endDate).toLocaleDateString()}
+                  {format(new Date(camp.startDate), 'PPP')} - {format(new Date(camp.endDate), 'PPP')}
                 </TableCell>
                 <TableCell>
                   <Badge variant={camp.status === 'Ongoing' ? 'default' : 'secondary'} className={
@@ -358,7 +357,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
           <DialogHeader>
             <DialogTitle className="font-headline">{selectedCamp?.name} - Participants</DialogTitle>
             <DialogDescription>
-                Registered: {getParticipantCount(selectedCamp?.id ?? '')} / {selectedCamp?.maxParticipants}.
+                Registered: {getParticipantCount(selectedCamp?.id ?? '', registrations)} / {selectedCamp?.maxParticipants}.
                 List of students registered for this camp.
             </DialogDescription>
           </DialogHeader>
