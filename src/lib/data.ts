@@ -73,7 +73,6 @@ export async function getCamps(): Promise<Camp[]> {
   try {
     const campsCol = collection(db, 'camps');
     const campSnapshot = await getDocs(campsCol);
-    
     const camps = campSnapshot.docs.map(doc => firestoreToCamp(doc));
     return camps.sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
   } catch (error) {
