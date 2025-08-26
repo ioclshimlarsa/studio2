@@ -37,6 +37,11 @@ export async function saveCampAction(data: CampFormData) {
         startDate: Timestamp.fromDate(data.startDate),
         endDate: Timestamp.fromDate(data.endDate),
     };
+    // remove id if it exists, as we don't want to save it to the document
+    if ('id' in campDataForDb) {
+      delete campDataForDb.id;
+    }
+
 
     if (data.id) {
         // This is an update
@@ -121,8 +126,6 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
         return { success: false, message: `Registration failed. Only ${availableSlots} slots remaining.` };
     }
 
-    // In a real app, you'd get the school ID and name from the logged-in user session
-    // For this prototype, we'll find a known school user.
     const schoolUsers = await getSchoolUsers();
     const schoolUser = schoolUsers.find(u => u.schoolName === 'Sacred Heart Convent School');
     
@@ -160,7 +163,6 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
 
 export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ success: boolean; message: string; newUser?: SchoolUser; }> {
   try {
-    // Manually construct the object to be saved, excluding password fields.
     const newUserToSave = {
       schoolName: data.schoolName,
       location: data.location,
@@ -170,7 +172,7 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
       trainerContact: data.trainerContact,
       schoolEmail: data.schoolEmail,
       status: 'Active' as SchoolUserStatus,
-      createdAt: Timestamp.fromDate(new Date()), // Convert to Firestore Timestamp
+      createdAt: Timestamp.now(), // Use Firestore Timestamp
     };
 
     const docRef = await addDoc(collection(db, "schoolUsers"), newUserToSave);
@@ -179,14 +181,7 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
 
     const savedUser: SchoolUser = {
       id: docRef.id,
-      schoolName: data.schoolName,
-      location: data.location,
-      district: data.district,
-      principalName: data.principalName,
-      trainerName: data.trainerName,
-      trainerContact: data.trainerContact,
-      schoolEmail: data.schoolEmail,
-      status: 'Active',
+      ...newUserToSave,
       createdAt: newUserToSave.createdAt.toDate(), // Convert back to Date for the return object
     };
 
@@ -210,8 +205,7 @@ export async function bulkAddSchoolUsersAction(
     const newUsers: SchoolUser[] = [];
 
     for (const data of usersData) {
-      // Correctly create the user object for the database, omitting password fields
-      const newUser: Omit<SchoolUser, 'id'> = {
+      const newUserForDb = {
         schoolName: data.schoolName,
         location: data.location,
         district: data.district,
@@ -219,21 +213,20 @@ export async function bulkAddSchoolUsersAction(
         trainerName: data.trainerName,
         trainerContact: data.trainerContact,
         schoolEmail: data.schoolEmail,
-        status: 'Active',
-        createdAt: new Date(),
+        status: 'Active' as SchoolUserStatus,
+        createdAt: Timestamp.now(), // Use Firestore Timestamp
       };
       
       const docRef = doc(collection(db, 'schoolUsers'));
-      batch.set(docRef, {
-        ...newUser,
-        createdAt: Timestamp.fromDate(newUser.createdAt),
+      batch.set(docRef, newUserForDb);
+      newUsers.push({ 
+          ...newUserForDb, 
+          id: docRef.id,
+          createdAt: newUserForDb.createdAt.toDate()
       });
-      newUsers.push({ ...newUser, id: docRef.id });
     }
 
     await batch.commit();
-
-    console.log(`${newUsers.length} new schools were added via bulk upload.`);
     
     revalidatePath("/admin");
     return { 
@@ -251,8 +244,6 @@ export async function updateSchoolUserStatusAction(userId: string, status: Schoo
     try {
         const userRef = doc(db, "schoolUsers", userId);
         await updateDoc(userRef, { status: status });
-        // In a real app with Firebase Auth, you might disable the user account here.
-        // e.g., admin.auth().updateUser(authUid, { disabled: status !== 'Active' });
         revalidatePath("/admin");
         return { success: true, message: `User status updated to ${status}.` };
     } catch (error) {
@@ -263,10 +254,6 @@ export async function updateSchoolUserStatusAction(userId: string, status: Schoo
 
 export async function resetSchoolUserPasswordAction(userId: string, newPassword?: string) {
     try {
-        // In a real app with Firebase Auth, you would use the Firebase Admin SDK to update the user's password
-        // or send a password reset email.
-        // e.g., admin.auth().updateUser(authUid, { password: newPassword });
-        // e.g., admin.auth().generatePasswordResetLink(email);
         console.log(`Password reset requested for user ${userId}. New password would be: ${newPassword}`);
         revalidatePath("/admin");
         return { success: true, message: "A password reset has been simulated successfully." };
@@ -278,8 +265,6 @@ export async function resetSchoolUserPasswordAction(userId: string, newPassword?
 export async function deleteSchoolUserAction(userId: string) {
     try {
         await deleteDoc(doc(db, "schoolUsers", userId));
-         // In a real app with Firebase Auth, you would also delete the user from the Auth service.
-        // e.g., admin.auth().deleteUser(authUid);
         revalidatePath("/admin");
         return { success: true, message: "User has been deleted successfully." };
     } catch (error) {
