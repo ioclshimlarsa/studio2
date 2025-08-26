@@ -78,13 +78,16 @@ function CampCard({ camp, registrations, onRegister }: { camp: Camp, registratio
                 </div>
             </CardContent>
             <CardFooter>
-                {camp.status !== 'Past' && !isFull && (
+                {camp.status === 'Upcoming' && !isFull && (
                     <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onRegister(camp)}>
                         Register Students
                     </Button>
                 )}
-                 {camp.status !== 'Past' && isFull && (
+                 {camp.status === 'Upcoming' && isFull && (
                     <Badge variant="destructive" className="w-full justify-center">Camp Full</Badge>
+                )}
+                {camp.status === 'Ongoing' && (
+                    <Badge variant="outline" className="w-full justify-center bg-green-200 text-green-800">Camp in progress</Badge>
                 )}
                  {camp.status === 'Past' && (
                     <Badge variant="outline" className="w-full justify-center">Camp concluded</Badge>
