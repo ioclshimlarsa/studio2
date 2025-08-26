@@ -64,8 +64,6 @@ const districtOptions = punjabDistricts.map(district => ({
 
 export function CampManagement({ initialCamps, initialRegistrations }: CampManagementProps) {
   const { toast } = useToast();
-  const [camps] = useState<Camp[]>(initialCamps);
-  const [registrations] = useState<Registration[]>(initialRegistrations);
   const [isFormOpen, setFormOpen] = useState(false);
   const [isDetailsOpen, setDetailsOpen] = useState(false);
   const [isDeleteOpen, setDeleteOpen] = useState(false);
@@ -191,10 +189,10 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
             </TableRow>
           </TableHeader>
           <TableBody>
-            {camps.map((camp) => (
+            {initialCamps.map((camp) => (
               <TableRow key={camp.id}>
                 <TableCell className="font-medium">{camp.name}</TableCell>
-                <TableCell>{getParticipantCount(camp.id, registrations)} / {camp.maxParticipants}</TableCell>
+                <TableCell>{getParticipantCount(camp.id, initialRegistrations)} / {camp.maxParticipants}</TableCell>
                 <TableCell>
                   {format(new Date(camp.startDate), 'PPP')} - {format(new Date(camp.endDate), 'PPP')}
                 </TableCell>
@@ -357,14 +355,14 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
           <DialogHeader>
             <DialogTitle className="font-headline">{selectedCamp?.name} - Participants</DialogTitle>
             <DialogDescription>
-                Registered: {getParticipantCount(selectedCamp?.id ?? '', registrations)} / {selectedCamp?.maxParticipants}.
+                Registered: {getParticipantCount(selectedCamp?.id ?? '', initialRegistrations)} / {selectedCamp?.maxParticipants}.
                 List of students registered for this camp.
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto p-1">
             <ScrollArea className="h-full">
-              {registrations.filter(r => r.campId === selectedCamp?.id).length > 0 ? (
-                  registrations.filter(r => r.campId === selectedCamp?.id).map(reg => (
+              {initialRegistrations.filter(r => r.campId === selectedCamp?.id).length > 0 ? (
+                  initialRegistrations.filter(r => r.campId === selectedCamp?.id).map(reg => (
                       <div key={reg.id} className="mb-4">
                           <h3 className="font-bold my-2 text-primary">{reg.schoolName}</h3>
                           <Table>
@@ -420,3 +418,5 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
     </>
   );
 }
+
+    

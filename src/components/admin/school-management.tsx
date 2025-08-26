@@ -80,7 +80,6 @@ type SchoolManagementProps = {
 
 export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) {
   const { toast } = useToast();
-  const [schoolUsers] = useState<SchoolUser[]>(initialSchoolUsers);
   const [isFormOpen, setFormOpen] = useState(false);
   const [isBulkOpen, setBulkOpen] = useState(false);
   const [isAlertOpen, setAlertOpen] = useState(false);
@@ -259,7 +258,7 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {schoolUsers.map((user) => (
+            {initialSchoolUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">
                   <div>{user.schoolName}</div>
@@ -441,3 +440,5 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
     </>
   );
 }
+
+    
