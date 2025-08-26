@@ -2,11 +2,20 @@ import { getCamps, getRegistrations, getSchoolUsers } from '@/lib/data';
 import { CampManagement } from '@/components/admin/camp-management';
 import { SchoolManagement } from '@/components/admin/school-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Camp } from '@/lib/types';
 
 export default async function AdminDashboardPage() {
-  const camps = await getCamps();
+  const campsData = await getCamps();
   const allRegistrations = await getRegistrations();
   const schoolUsers = await getSchoolUsers();
+
+  // Calculate participant counts on the server
+  const campsWithParticipantCounts: Camp[] = campsData.map(camp => {
+    const participantCount = allRegistrations
+      .filter(r => r.campId === camp.id)
+      .reduce((sum, reg) => sum + reg.students.length, 0);
+    return { ...camp, participantCount };
+  });
 
   return (
     <>
@@ -20,7 +29,7 @@ export default async function AdminDashboardPage() {
           <TabsTrigger value="schools">School Management</TabsTrigger>
         </TabsList>
         <TabsContent value="camps" className="mt-6">
-           <CampManagement initialCamps={camps} initialRegistrations={allRegistrations} />
+           <CampManagement initialCamps={campsWithParticipantCounts} initialRegistrations={allRegistrations} />
         </TabsContent>
         <TabsContent value="schools" className="mt-6">
           <SchoolManagement initialSchoolUsers={schoolUsers} />

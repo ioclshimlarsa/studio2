@@ -162,11 +162,12 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
     });
   };
   
-  const getParticipantCount = (campId: string, registrationsList: Registration[]) => {
-      return registrationsList
-        .filter(r => r.campId === campId)
-        .reduce((sum, reg) => sum + reg.students.length, 0);
-  }
+  const getParticipantCountForDialog = (campId: string | null | undefined): number => {
+    if (!campId) return 0;
+    return initialRegistrations
+      .filter(r => r.campId === campId)
+      .reduce((sum, reg) => sum + reg.students.length, 0);
+  };
 
   return (
     <>
@@ -192,7 +193,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
             {initialCamps.map((camp) => (
               <TableRow key={camp.id}>
                 <TableCell className="font-medium">{camp.name}</TableCell>
-                <TableCell>{getParticipantCount(camp.id, initialRegistrations)} / {camp.maxParticipants}</TableCell>
+                <TableCell>{camp.participantCount ?? 0} / {camp.maxParticipants}</TableCell>
                 <TableCell>
                   {format(new Date(camp.startDate), 'PPP')} - {format(new Date(camp.endDate), 'PPP')}
                 </TableCell>
@@ -355,7 +356,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
           <DialogHeader>
             <DialogTitle className="font-headline">{selectedCamp?.name} - Participants</DialogTitle>
             <DialogDescription>
-                Registered: {getParticipantCount(selectedCamp?.id ?? '', initialRegistrations)} / {selectedCamp?.maxParticipants}.
+                Registered: {getParticipantCountForDialog(selectedCamp?.id)} / {selectedCamp?.maxParticipants}.
                 List of students registered for this camp.
             </DialogDescription>
           </DialogHeader>
@@ -418,5 +419,3 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
     </>
   );
 }
-
-    

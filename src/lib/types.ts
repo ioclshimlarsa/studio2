@@ -74,6 +74,7 @@ export interface Camp {
   endDate: string; // Changed to string
   status: 'Upcoming' | 'Ongoing' | 'Past';
   maxParticipants: number;
+  participantCount?: number; // Added for server-side calculation
 }
 
 export interface Student {
