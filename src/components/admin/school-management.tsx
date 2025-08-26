@@ -146,7 +146,7 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
   const processForm = (data: SchoolUserFormData) => {
     startTransition(async () => {
       const result = await saveSchoolUserAction(data);
-      if (result.success && result.newUser) {
+      if (result.success) {
         toast({ title: 'Success!', description: result.message });
         setFormOpen(false);
       } else {
