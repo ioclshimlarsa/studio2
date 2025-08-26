@@ -81,6 +81,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
       contactPerson: '',
       contactNumber: '',
       contactEmail: '',
+      maxParticipants: 50,
     },
   });
 
@@ -101,6 +102,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
       contactPerson: '',
       contactNumber: '',
       contactEmail: '',
+      maxParticipants: 50,
     });
     setFormOpen(true);
   };
@@ -153,6 +155,12 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
       }
     });
   };
+  
+  const getParticipantCount = (campId: string) => {
+      return registrations
+        .filter(r => r.campId === campId)
+        .reduce((sum, reg) => sum + reg.students.length, 0);
+  }
 
   return (
     <>
@@ -168,7 +176,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
           <TableHeader>
             <TableRow>
               <TableHead>Camp Name</TableHead>
-              <TableHead>District(s)</TableHead>
+              <TableHead>Participants</TableHead>
               <TableHead>Dates</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -178,7 +186,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
             {camps.map((camp) => (
               <TableRow key={camp.id}>
                 <TableCell className="font-medium">{camp.name}</TableCell>
-                <TableCell>{camp.district.join(', ')}</TableCell>
+                <TableCell>{getParticipantCount(camp.id)} / {camp.maxParticipants}</TableCell>
                 <TableCell>
                   {camp.startDate.toLocaleDateString()} - {camp.endDate.toLocaleDateString()}
                 </TableCell>
@@ -270,7 +278,14 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
                       </FormItem>
                     )}
                   />
-
+                   <FormField control={form.control} name="maxParticipants" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Maximum Participants</FormLabel>
+                        <FormControl><Input type="number" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="contactPerson" render={({ field }) => (
                         <FormItem>
@@ -332,7 +347,10 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-headline">{selectedCamp?.name} - Participants</DialogTitle>
-            <DialogDescription>List of students registered for this camp.</DialogDescription>
+            <DialogDescription>
+                Registered: {getParticipantCount(selectedCamp?.id ?? '')} / {selectedCamp?.maxParticipants}.
+                List of students registered for this camp.
+            </DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto p-1">
             {registrations.filter(r => r.campId === selectedCamp?.id).length > 0 ? (

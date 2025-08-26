@@ -2,8 +2,8 @@
 
 import { generateCampNotification } from "@/ai/flows/camp-notification-generator";
 import { revalidatePath } from "next/cache";
-import type { CampFormData, SchoolUser, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
-import { mockSchoolUsers } from "./data";
+import type { CampFormData, Registration, SchoolUser, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
+import { mockCamps, mockRegistrations, mockSchoolUsers } from "./data";
 import { SchoolUserSchema } from "./types";
 
 
@@ -24,6 +24,7 @@ export async function saveCampAction(data: CampFormData) {
     });
     
     revalidatePath("/admin");
+    revalidatePath("/school");
 
     return { 
       success: true,
@@ -45,18 +46,44 @@ export async function deleteCampAction(campId: string) {
         // In a real app, this would delete from a database
         console.log("Deleting camp with ID:", campId);
         revalidatePath("/admin");
+        revalidatePath("/school");
         return { success: true, message: "Camp deleted successfully." };
     } catch (error) {
         return { success: false, message: "Failed to delete camp." };
     }
 }
 
-export async function registerStudentsAction(data: StudentRegistrationData) {
+export async function registerStudentsAction(data: StudentRegistrationData): Promise<{success: boolean, message: string, newRegistration?: Registration}> {
   try {
-    // In a real app, this would save to a database
+    const camp = mockCamps.find(c => c.id === data.campId);
+    if (!camp) {
+        return { success: false, message: "Camp not found." };
+    }
+
+    const currentRegistrations = mockRegistrations.filter(r => r.campId === data.campId);
+    const currentParticipantCount = currentRegistrations.reduce((sum, reg) => sum + reg.students.length, 0);
+
+    const newStudentNames = data.studentNames.split('\n').map(name => name.trim()).filter(name => name);
+    const newParticipantCount = newStudentNames.length;
+
+    if (currentParticipantCount + newParticipantCount > camp.maxParticipants) {
+        const availableSlots = camp.maxParticipants - currentParticipantCount;
+        return { success: false, message: `Registration failed. Only ${availableSlots} slots remaining.` };
+    }
+
+    const newRegistration: Registration = {
+        campId: data.campId,
+        // In a real app, you'd get the school ID from the logged-in user
+        schoolId: `school-${Math.random().toString(36).substr(2, 5)}`,
+        students: newStudentNames.map(name => ({ name })),
+    };
+    
+    mockRegistrations.push(newRegistration);
+    
     console.log("Registering students:", data);
     revalidatePath("/school");
-    return { success: true, message: "Students registered successfully!" };
+    revalidatePath("/admin");
+    return { success: true, message: "Students registered successfully!", newRegistration };
   } catch (error) {
     return { success: false, message: "Failed to register students." };
   }

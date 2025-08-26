@@ -30,6 +30,7 @@ export const mockCamps: Camp[] = [
     startDate: addDays(today, 10),
     endDate: addDays(today, 17),
     status: 'Upcoming',
+    maxParticipants: 50,
   },
   {
     id: '2',
@@ -44,6 +45,7 @@ export const mockCamps: Camp[] = [
     startDate: addDays(today, -1),
     endDate: addDays(today, 2),
     status: 'Ongoing',
+    maxParticipants: 30,
   },
   {
     id: '3',
@@ -58,6 +60,7 @@ export const mockCamps: Camp[] = [
     startDate: addDays(today, 30),
     endDate: addDays(today, 32),
     status: 'Upcoming',
+    maxParticipants: 100,
   },
   {
     id: '4',
@@ -72,6 +75,7 @@ export const mockCamps: Camp[] = [
     startDate: addDays(today, -40),
     endDate: addDays(today, -33),
     status: 'Past',
+    maxParticipants: 40,
   },
     {
     id: '5',
@@ -86,11 +90,17 @@ export const mockCamps: Camp[] = [
     startDate: addDays(today, -90),
     endDate: addDays(today, -85),
     status: 'Past',
+    maxParticipants: 60,
   },
 ];
 
 // Mock data for registrations
 export const mockRegistrations: Registration[] = [
+    {
+        campId: '2',
+        schoolId: 'school-1',
+        students: Array.from({length: 28}, (_, i) => ({name: `Student ${i+1}`}))
+    },
     {
         campId: '4',
         schoolId: 'school-1',
@@ -179,6 +189,11 @@ export async function getCamps(): Promise<Camp[]> {
 // Simulate fetching registrations for a camp
 export async function getRegistrationsForCamp(campId: string): Promise<Registration[]> {
     return mockRegistrations.filter(r => r.campId === campId);
+}
+
+// Simulate fetching all registrations
+export async function getRegistrations(): Promise<Registration[]> {
+  return mockRegistrations;
 }
 
 // Simulate fetching all school users

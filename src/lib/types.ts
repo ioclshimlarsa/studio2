@@ -12,6 +12,7 @@ export const CampSchema = z.object({
   contactEmail: z.string().email({ message: "Invalid email address." }),
   startDate: z.date({ required_error: "Start date is required."}),
   endDate: z.date({ required_error: "End date is required."}),
+  maxParticipants: z.coerce.number().int().positive({ message: "Maximum participants must be a positive number." }),
 }).refine(data => data.endDate > data.startDate, {
     message: "End date must be after start date.",
     path: ["endDate"],
@@ -52,6 +53,7 @@ export interface Camp {
   startDate: Date;
   endDate: Date;
   status: 'Upcoming' | 'Ongoing' | 'Past';
+  maxParticipants: number;
 }
 
 export interface Student {

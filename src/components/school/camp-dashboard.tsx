@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerStudentsAction } from '@/lib/actions';
 import { StudentRegistrationSchema, type StudentRegistrationData } from '@/lib/types';
-import type { Camp } from '@/lib/types';
+import type { Camp, Registration } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,15 +27,23 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, MapPin, Target, Phone, User } from 'lucide-react';
+import { Calendar, MapPin, Target, Phone, User, Users } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
+import { getRegistrationsForCamp } from '@/lib/data';
 
 type CampDashboardProps = {
   initialCamps: Camp[];
+  initialRegistrations: Registration[];
 };
 
-function CampCard({ camp, onRegister }: { camp: Camp, onRegister: (camp: Camp) => void }) {
+function CampCard({ camp, registrations, onRegister }: { camp: Camp, registrations: Registration[], onRegister: (camp: Camp) => void }) {
+    const participantCount = useMemo(() => {
+        return registrations.filter(r => r.campId === camp.id).reduce((sum, reg) => sum + reg.students.length, 0);
+    }, [registrations, camp.id]);
+
+    const isFull = participantCount >= camp.maxParticipants;
+
     return (
         <Card className="flex flex-col h-full shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
@@ -63,13 +71,20 @@ function CampCard({ camp, onRegister }: { camp: Camp, onRegister: (camp: Camp) =
                         <Phone className="h-4 w-4" />
                         <span>{camp.contactNumber}</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        <span>Slots: {participantCount} / {camp.maxParticipants}</span>
+                    </div>
                 </div>
             </CardContent>
             <CardFooter>
-                {camp.status !== 'Past' && (
+                {camp.status !== 'Past' && !isFull && (
                     <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onRegister(camp)}>
                         Register Students
                     </Button>
+                )}
+                 {camp.status !== 'Past' && isFull && (
+                    <Badge variant="destructive" className="w-full justify-center">Camp Full</Badge>
                 )}
                  {camp.status === 'Past' && (
                     <Badge variant="outline" className="w-full justify-center">Camp concluded</Badge>
@@ -79,20 +94,21 @@ function CampCard({ camp, onRegister }: { camp: Camp, onRegister: (camp: Camp) =
     )
 }
 
-function CampList({ camps, onRegister }: { camps: Camp[], onRegister: (camp: Camp) => void }) {
+function CampList({ camps, registrations, onRegister }: { camps: Camp[], registrations: Registration[], onRegister: (camp: Camp) => void }) {
     if (camps.length === 0) {
         return <div className="text-center text-muted-foreground py-16">No camps to display in this category.</div>
     }
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {camps.map(camp => <CampCard key={camp.id} camp={camp} onRegister={onRegister} />)}
+            {camps.map(camp => <CampCard key={camp.id} camp={camp} registrations={registrations} onRegister={onRegister} />)}
         </div>
     )
 }
 
-export function CampDashboard({ initialCamps }: CampDashboardProps) {
+export function CampDashboard({ initialCamps, initialRegistrations }: CampDashboardProps) {
   const { toast } = useToast();
   const [camps] = useState<Camp[]>(initialCamps);
+  const [registrations, setRegistrations] = useState<Registration[]>(initialRegistrations);
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -123,6 +139,9 @@ export function CampDashboard({ initialCamps }: CampDashboardProps) {
     startTransition(async () => {
       const result = await registerStudentsAction(data);
       if (result.success) {
+        if (result.newRegistration) {
+            setRegistrations(prev => [...prev, result.newRegistration!]);
+        }
         toast({
           title: 'Success!',
           description: result.message,
@@ -147,13 +166,13 @@ export function CampDashboard({ initialCamps }: CampDashboardProps) {
           <TabsTrigger value="past">Past</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming" className="mt-6">
-            <CampList camps={upcoming} onRegister={handleRegister} />
+            <CampList camps={upcoming} registrations={registrations} onRegister={handleRegister} />
         </TabsContent>
         <TabsContent value="ongoing" className="mt-6">
-            <CampList camps={ongoing} onRegister={handleRegister} />
+            <CampList camps={ongoing} registrations={registrations} onRegister={handleRegister} />
         </TabsContent>
         <TabsContent value="past" className="mt-6">
-            <CampList camps={past} onRegister={handleRegister} />
+            <CampList camps={past} registrations={registrations} onRegister={handleRegister} />
         </TabsContent>
       </Tabs>
 
