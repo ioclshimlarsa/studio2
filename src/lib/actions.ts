@@ -7,7 +7,7 @@ import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, w
 
 import type { Camp, CampFormData, Registration, SchoolUser, SchoolUserFormData, SchoolUserStatus, StudentRegistrationData } from "./types";
 import { SchoolUserSchema } from "./types";
-import { getSchoolUser, getSchoolUsers } from "./data";
+import { getSchoolUsers } from "./data";
 
 export async function loginAction(email: string): Promise<{ success: boolean; message: string }> {
     try {
@@ -123,8 +123,9 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
     }
 
     // In a real app, you'd get the school ID and name from the logged-in user session
-    // For this prototype, we'll use a hardcoded school user.
-    const schoolUser = await getSchoolUser('school-1'); // Assuming a default school user for now.
+    // For this prototype, we'll find a known school user.
+    const schoolUsers = await getSchoolUsers();
+    const schoolUser = schoolUsers.find(u => u.schoolName === 'Sacred Heart Convent School');
     
     if (!schoolUser) {
         return { success: false, message: "Could not identify the school. Please log in again." };
@@ -172,11 +173,12 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
         ...newUser,
         createdAt: Timestamp.fromDate(newUser.createdAt)
     });
+    
+    revalidatePath("/admin");
 
     const message = `School user "${data.schoolName}" created successfully! They can now log in with the email ${data.schoolEmail} and the password you provided.`;
-
-    revalidatePath("/admin");
     return { success: true, message, newUser: { ...newUser, id: docRef.id } };
+
   } catch (error) {
     console.error("Error saving school user:", error);
     return { success: false, message: "An error occurred while creating the school user." };
