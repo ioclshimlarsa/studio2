@@ -170,7 +170,7 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
       trainerContact: data.trainerContact,
       schoolEmail: data.schoolEmail,
       status: 'Active' as SchoolUserStatus,
-      createdAt: Timestamp.fromDate(new Date()),
+      createdAt: Timestamp.fromDate(new Date()), // Convert to Firestore Timestamp
     };
 
     const docRef = await addDoc(collection(db, "schoolUsers"), newUserToSave);
@@ -187,7 +187,7 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
       trainerContact: data.trainerContact,
       schoolEmail: data.schoolEmail,
       status: 'Active',
-      createdAt: new Date(),
+      createdAt: newUserToSave.createdAt.toDate(), // Convert back to Date for the return object
     };
 
     const message = `School user "${savedUser.schoolName}" created successfully! They can now log in with the email ${savedUser.schoolEmail}.`;
