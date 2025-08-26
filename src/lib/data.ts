@@ -3,6 +3,14 @@ import { collection, getDocs, query, where, doc, getDoc, Timestamp, addDoc } fro
 import type { Camp, Registration, SchoolUser } from './types';
 import { mockCamps, mockSchoolUsers, mockRegistrations } from './mock-data';
 
+export const punjabDistricts = [
+  "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib",
+  "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar",
+  "Kapurthala", "Ludhiana", "Malerkotla", "Mansa", "Moga",
+  "Pathankot", "Patiala", "Rupnagar", "Sahibzada Ajit Singh Nagar (Mohali)",
+  "Sangrur", "Shaheed Bhagat Singh Nagar", "Sri Muktsar Sahib", "Tarn Taran"
+];
+
 const firestoreToCamp = (doc: any): Camp => {
     const data = doc.data();
     const camp: Camp = {
