@@ -27,7 +27,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -48,6 +47,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -61,7 +61,6 @@ import {
     PlusCircle, 
     Ban, 
     KeyRound, 
-    CheckCircle,
     UserX,
     UserCheck,
 } from 'lucide-react';
@@ -75,9 +74,11 @@ type SchoolManagementProps = {
 
 export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) {
   const { toast } = useToast();
-  const [schoolUsers] = useState<SchoolUser[]>(initialSchoolUsers);
+  const [schoolUsers, setSchoolUsers] = useState<SchoolUser[]>(initialSchoolUsers);
   const [isFormOpen, setFormOpen] = useState(false);
   const [isAlertOpen, setAlertOpen] = useState(false);
+  const [isPasswordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
   const [alertContent, setAlertContent] = useState({ title: '', description: '', onConfirm: () => {} });
   const [selectedUser, setSelectedUser] = useState<SchoolUser | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -102,27 +103,27 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
   };
 
   const handleStatusChange = (user: SchoolUser, status: SchoolUserStatus) => {
+    setSelectedUser(user);
+    const actionText = status === 'Active' ? 'activate' : status === 'Inactive' ? 'deactivate' : 'block';
     setAlertContent({
-        title: `Confirm ${status}`,
-        description: `Are you sure you want to set "${user.schoolName}" to ${status}?`,
+        title: `Confirm ${actionText}`,
+        description: `Are you sure you want to ${actionText} "${user.schoolName}"?`,
         onConfirm: () => processStatusUpdate(user.id, status)
     });
     setAlertOpen(true);
   };
   
   const handlePasswordReset = (user: SchoolUser) => {
-     setAlertContent({
-        title: 'Confirm Password Reset',
-        description: `Are you sure you want to send a password reset link to "${user.schoolName}"?`,
-        onConfirm: () => processPasswordReset(user.id)
-    });
-    setAlertOpen(true);
+    setSelectedUser(user);
+    setNewPassword('');
+    setPasswordDialogOpen(true);
   };
 
   const processForm = (data: SchoolUserFormData) => {
     startTransition(async () => {
       const result = await saveSchoolUserAction(data);
-      if (result.success) {
+      if (result.success && result.newUser) {
+        setSchoolUsers(prev => [result.newUser!, ...prev]);
         toast({ title: 'Success!', description: result.message });
         setFormOpen(false);
       } else {
@@ -135,6 +136,7 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
     startTransition(async () => {
         const result = await updateSchoolUserStatusAction(userId, status);
         if (result.success) {
+            setSchoolUsers(prev => prev.map(u => u.id === userId ? { ...u, status } : u));
             toast({ title: 'Success', description: result.message });
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
@@ -143,15 +145,19 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
     });
   };
   
-  const processPasswordReset = (userId: string) => {
+  const processPasswordReset = () => {
+    if (!selectedUser || !newPassword) {
+        toast({ variant: "destructive", title: "Error", description: "Password cannot be empty." });
+        return;
+    }
     startTransition(async () => {
-        const result = await resetSchoolUserPasswordAction(userId);
+        const result = await resetSchoolUserPasswordAction(selectedUser.id, newPassword);
         if (result.success) {
             toast({ title: 'Success', description: result.message });
+            setPasswordDialogOpen(false);
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
         }
-        setAlertOpen(false);
     });
   };
   
@@ -279,7 +285,7 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
         </DialogContent>
       </Dialog>
       
-      {/* Confirmation Alert Dialog */}
+      {/* Confirmation Alert Dialog for Status Change */}
       <AlertDialog open={isAlertOpen} onOpenChange={setAlertOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -294,6 +300,34 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Password Reset Dialog */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Reset Password for {selectedUser?.schoolName}</DialogTitle>
+                  <DialogDescription>Enter a new password for the user.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="new-password" >New Password</Label>
+                      <Input
+                          id="new-password"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="col-span-3"
+                      />
+                  </div>
+              </div>
+              <DialogFooter>
+                  <Button variant="ghost" onClick={() => setPasswordDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={processPasswordReset} disabled={isPending}>
+                      {isPending ? 'Resetting...' : 'Set Password'}
+                  </Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
     </>
   );
 }
