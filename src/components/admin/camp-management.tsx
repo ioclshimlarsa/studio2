@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useTransition } from 'react';
@@ -196,7 +197,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
                 <TableCell className="font-medium">{camp.name}</TableCell>
                 <TableCell>{getParticipantCount(camp.id)} / {camp.maxParticipants}</TableCell>
                 <TableCell>
-                  {camp.startDate.toLocaleDateString()} - {camp.endDate.toLocaleDateString()}
+                  {new Date(camp.startDate).toLocaleDateString()} - {new Date(camp.endDate).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
                   <Badge variant={camp.status === 'Ongoing' ? 'default' : 'secondary'} className={
@@ -380,7 +381,7 @@ export function CampManagement({ initialCamps, initialRegistrations }: CampManag
                                   <TableRow key={index}>
                                     <TableCell>{student.name}</TableCell>
                                     <TableCell>{student.fatherName}</TableCell>
-                                    <TableCell>{format(student.dob, 'PPP')}</TableCell>
+                                    <TableCell>{format(new Date(student.dob), 'PPP')}</TableCell>
                                   </TableRow>
                               ))}
                             </TableBody>

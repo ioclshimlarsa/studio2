@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 export const CampSchema = z.object({
@@ -69,8 +70,8 @@ export interface Camp {
   contactPerson: string;
   contactNumber: string;
   contactEmail: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string; // Changed to string
+  endDate: string; // Changed to string
   status: 'Upcoming' | 'Ongoing' | 'Past';
   maxParticipants: number;
 }
@@ -78,7 +79,7 @@ export interface Camp {
 export interface Student {
   name: string;
   fatherName: string;
-  dob: Date;
+  dob: string; // Changed to string
 }
 
 export interface Registration {
@@ -101,5 +102,5 @@ export interface SchoolUser {
   trainerContact: string;
   schoolEmail: string;
   status: SchoolUserStatus;
-  createdAt: Date;
+  createdAt: string; // Changed to string
 }

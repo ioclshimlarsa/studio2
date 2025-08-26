@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useTransition, useMemo } from 'react';
@@ -58,7 +59,7 @@ function CampCard({ camp, registrations, onRegister }: { camp: Camp, registratio
                 <p>{camp.description}</p>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span>{format(camp.startDate, "MMM d, yyyy")} - {format(camp.endDate, "MMM d, yyyy")}</span>
+                    <span>{format(new Date(camp.startDate), "MMM d, yyyy")} - {format(new Date(camp.endDate), "MMM d, yyyy")}</span>
                 </div>
                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
                     <Target className="h-4 w-4 mt-1 flex-shrink-0" />

@@ -1,15 +1,9 @@
+
 import { db } from './firebase';
-import { collection, getDocs, query, where, doc, getDoc, Timestamp, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore';
 import type { Camp, Registration, SchoolUser } from './types';
 
-export const punjabDistricts = [
-  "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib",
-  "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar",
-  "Kapurthala", "Ludhiana", "Malerkotla", "Mansa", "Moga",
-  "Pathankot", "Patiala", "Rupnagar", "Sahibzada Ajit Singh Nagar (Mohali)",
-  "Sangrur", "Shaheed Bhagat Singh Nagar", "Sri Muktsar Sahib", "Tarn Taran"
-];
-
+// Firestore data converters
 const firestoreToCamp = (doc: any): Camp => {
     const data = doc.data();
     const camp: Camp = {
@@ -22,15 +16,18 @@ const firestoreToCamp = (doc: any): Camp => {
         contactPerson: data.contactPerson,
         contactNumber: data.contactNumber,
         contactEmail: data.contactEmail,
-        startDate: (data.startDate as Timestamp).toDate(),
-        endDate: (data.endDate as Timestamp).toDate(),
+        startDate: (data.startDate as Timestamp).toDate().toISOString(),
+        endDate: (data.endDate as Timestamp).toDate().toISOString(),
         maxParticipants: data.maxParticipants,
         status: 'Upcoming' // This will be calculated
     };
     const now = new Date();
-    if (now < camp.startDate) {
+    const startDate = new Date(camp.startDate);
+    const endDate = new Date(camp.endDate);
+
+    if (now < startDate) {
       camp.status = 'Upcoming';
-    } else if (now >= camp.startDate && now <= camp.endDate) {
+    } else if (now >= startDate && now <= endDate) {
       camp.status = 'Ongoing';
     } else {
       camp.status = 'Past';
@@ -47,7 +44,7 @@ const firestoreToRegistration = (doc: any): Registration => {
         schoolName: data.schoolName,
         students: data.students.map((s: any) => ({
             ...s,
-            dob: (s.dob as Timestamp).toDate()
+            dob: (s.dob as Timestamp).toDate().toISOString()
         }))
     };
 };
@@ -64,17 +61,29 @@ const firestoreToSchoolUser = (doc: any): SchoolUser => {
         trainerContact: data.trainerContact,
         schoolEmail: data.schoolEmail,
         status: data.status,
-        createdAt: (data.createdAt as Timestamp).toDate(),
+        createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
     };
 };
+
+
+export const punjabDistricts = [
+  "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib",
+  "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar",
+  "Kapurthala", "Ludhiana", "Malerkotla", "Mansa", "Moga",
+  "Pathankot", "Patiala", "Rupnagar", "Sahibzada Ajit Singh Nagar (Mohali)",
+  "Sangrur", "Shaheed Bhagat Singh Nagar", "Sri Muktsar Sahib", "Tarn Taran"
+];
 
 // Fetch all camps
 export async function getCamps(): Promise<Camp[]> {
   try {
     const campsCol = collection(db, 'camps');
     const campSnapshot = await getDocs(campsCol);
+    if (campSnapshot.empty) {
+        return [];
+    }
     const camps = campSnapshot.docs.map(doc => firestoreToCamp(doc));
-    return camps.sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+    return camps.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
   } catch (error) {
     console.error("Error fetching camps: ", error);
     return [];
@@ -86,6 +95,9 @@ export async function getRegistrationsForCamp(campId: string): Promise<Registrat
   try {
     const q = query(collection(db, "registrations"), where("campId", "==", campId));
     const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+        return [];
+    }
     return querySnapshot.docs.map(doc => firestoreToRegistration(doc));
   } catch (error) {
     console.error("Error fetching registrations for camp: ", error);
@@ -98,6 +110,9 @@ export async function getRegistrations(): Promise<Registration[]> {
   try {
     const registrationsCol = collection(db, 'registrations');
     const registrationSnapshot = await getDocs(registrationsCol);
+    if (registrationSnapshot.empty) {
+        return [];
+    }
     return registrationSnapshot.docs.map(doc => firestoreToRegistration(doc));
   } catch (error) {
     console.error("Error fetching all registrations: ", error);
@@ -110,8 +125,11 @@ export async function getSchoolUsers(): Promise<SchoolUser[]> {
   try {
     const usersCol = collection(db, 'schoolUsers');
     const userSnapshot = await getDocs(usersCol);
+    if (userSnapshot.empty) {
+        return [];
+    }
     const users = userSnapshot.docs.map(doc => firestoreToSchoolUser(doc));
-    return users.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {
     console.error("Error fetching school users: ", error);
     return [];

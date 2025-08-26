@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -16,7 +17,7 @@ export function CampWiseReport({ camps, registrations }: CampWiseReportProps) {
   const [selectedCampId, setSelectedCampId] = useState<string | null>(null);
 
   const sortedCamps = useMemo(() => {
-    return [...camps].sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+    return [...camps].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
   }, [camps]);
 
   return (
@@ -29,7 +30,7 @@ export function CampWiseReport({ camps, registrations }: CampWiseReportProps) {
           <SelectContent>
             {sortedCamps.map(camp => (
               <SelectItem key={camp.id} value={camp.id}>
-                {camp.name} ({format(camp.startDate, 'PPP')})
+                {camp.name} ({format(new Date(camp.startDate), 'PPP')})
               </SelectItem>
             ))}
           </SelectContent>
