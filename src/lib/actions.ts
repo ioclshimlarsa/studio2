@@ -158,12 +158,14 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
   }
 }
 
-export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ success: boolean; message: string; newUser?: SchoolUser; }> {
+export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ success: boolean; message: string; newUser?: Omit<SchoolUser, 'password'>; }> {
   try {
+    const { password, confirmPassword, ...userData } = data;
+
     const newUser: Omit<SchoolUser, 'id'> = {
       status: 'Active',
       createdAt: new Date(),
-      ...data
+      ...userData
     };
     
     const docRef = await addDoc(collection(db, "schoolUsers"), {
@@ -172,8 +174,8 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
     });
 
     // In a real app, you would use the Firebase Admin SDK to create a new user in Firebase Auth.
-    // e.g., admin.auth().createUser({ email: data.schoolEmail, password: 'some-default-password' });
-    const message = `School user "${data.schoolName}" created successfully! A password must be set for them in the Firebase Console.`;
+    // e.g., admin.auth().createUser({ email: data.schoolEmail, password: password });
+    const message = `School user "${data.schoolName}" created successfully! They can now log in with the email ${data.schoolEmail} and the password you provided.`;
 
     revalidatePath("/admin");
     return { success: true, message, newUser: { ...newUser, id: docRef.id } };
@@ -208,10 +210,11 @@ export async function bulkAddSchoolUsersAction(
     const createdEmails: string[] = [];
 
     validUsersData.forEach(data => {
+        const { password, confirmPassword, ...userData } = data;
         const newUser: Omit<SchoolUser, 'id'> = {
             status: 'Active',
             createdAt: new Date(),
-            ...data
+            ...userData
         };
         const docRef = doc(collection(db, "schoolUsers"));
         batch.set(docRef, {

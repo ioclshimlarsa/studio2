@@ -100,6 +100,8 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
         trainerName: '',
         trainerContact: '',
         schoolEmail: '',
+        password: '',
+        confirmPassword: '',
     },
   });
 
@@ -339,8 +341,16 @@ export function SchoolManagement({ initialSchoolUsers }: SchoolManagementProps) 
                      )}/>
                    </div>
                   <FormField control={form.control} name="schoolEmail" render={({ field }) => (
-                      <FormItem><FormLabel>School Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel>School Login Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
                   )}/>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <FormField control={form.control} name="password" render={({ field }) => (
+                        <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                     )}/>
+                     <FormField control={form.control} name="confirmPassword" render={({ field }) => (
+                        <FormItem><FormLabel>Confirm Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                     )}/>
+                   </div>
                 </div>
               </ScrollArea>
               <DialogFooter>

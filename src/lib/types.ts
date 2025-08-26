@@ -42,7 +42,13 @@ export const SchoolUserSchema = z.object({
   trainerName: z.string().min(3, "Trainer's name is required."),
   trainerContact: z.string().regex(/^\d{10}$/, { message: "Please enter a valid 10-digit phone number." }),
   schoolEmail: z.string().email("Invalid email address."),
+  password: z.string().min(6, "Password must be at least 6 characters."),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
 });
+
 
 export type SchoolUserFormData = z.infer<typeof SchoolUserSchema>;
 
