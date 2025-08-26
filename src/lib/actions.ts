@@ -160,6 +160,8 @@ export async function registerStudentsAction(data: StudentRegistrationData): Pro
 
 export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ success: boolean; message: string; newUser?: SchoolUser; }> {
   try {
+    // We don't store passwords, but this action simulates creating a user with one.
+    // The password fields are only used for validation within the Zod schema.
     const { password, confirmPassword, ...userData } = data;
 
     const newUser: Omit<SchoolUser, 'id'> = {
@@ -175,11 +177,16 @@ export async function saveSchoolUserAction(data: SchoolUserFormData): Promise<{ 
     
     revalidatePath("/admin");
 
-    const message = `School user "${data.schoolName}" created successfully! They can now log in with the email ${data.schoolEmail} and the password you provided.`;
-    return { success: true, message, newUser: { ...newUser, id: docRef.id } };
+    const savedUser = { ...newUser, id: docRef.id };
+
+    const message = `School user "${savedUser.schoolName}" created successfully! They can now log in with the email ${savedUser.schoolEmail}.`;
+    return { success: true, message, newUser: savedUser };
 
   } catch (error) {
     console.error("Error saving school user:", error);
+    if (error instanceof Error) {
+        return { success: false, message: error.message };
+    }
     return { success: false, message: "An error occurred while creating the school user." };
   }
 }
