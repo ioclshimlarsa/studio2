@@ -1,7 +1,6 @@
 import { db } from './firebase';
 import { collection, getDocs, query, where, doc, getDoc, Timestamp, addDoc } from 'firebase/firestore';
 import type { Camp, Registration, SchoolUser } from './types';
-import { mockCamps, mockSchoolUsers, mockRegistrations } from './mock-data';
 
 export const punjabDistricts = [
   "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib",
@@ -69,57 +68,11 @@ const firestoreToSchoolUser = (doc: any): SchoolUser => {
     };
 };
 
-const seedDatabase = async () => {
-    console.log("Seeding database with mock data...");
-    try {
-        const campsCol = collection(db, 'camps');
-        for (const camp of mockCamps) {
-            const { id, ...campData } = camp;
-            await addDoc(campsCol, {
-                ...campData,
-                startDate: Timestamp.fromDate(campData.startDate),
-                endDate: Timestamp.fromDate(campData.endDate)
-            });
-        }
-
-        const usersCol = collection(db, 'schoolUsers');
-        for (const user of mockSchoolUsers) {
-            const { id, ...userData } = user;
-            await addDoc(usersCol, {
-                ...userData,
-                createdAt: Timestamp.fromDate(userData.createdAt)
-            });
-        }
-        
-        const regsCol = collection(db, 'registrations');
-        for (const reg of mockRegistrations) {
-            const { id, ...regData } = reg;
-             await addDoc(regsCol, {
-                ...regData,
-                students: regData.students.map(s => ({...s, dob: Timestamp.fromDate(s.dob)}))
-            });
-        }
-        console.log("Database seeded successfully.");
-        return true;
-    } catch (error) {
-        console.error("Error seeding database: ", error);
-        return false;
-    }
-}
-
-
 // Fetch all camps
 export async function getCamps(): Promise<Camp[]> {
   try {
     const campsCol = collection(db, 'camps');
-    let campSnapshot = await getDocs(campsCol);
-
-    if (campSnapshot.empty) {
-        const seeded = await seedDatabase();
-        if (seeded) {
-           campSnapshot = await getDocs(campsCol);
-        }
-    }
+    const campSnapshot = await getDocs(campsCol);
     
     const camps = campSnapshot.docs.map(doc => firestoreToCamp(doc));
     return camps.sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
